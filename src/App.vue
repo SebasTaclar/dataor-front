@@ -1,23 +1,24 @@
 <template>
-  <header>
-    <nav class="navbar">
+  <header :class="['header', { scrolled: isScrolled }]">
+    <div class="nav-container">
+      <nav class="navbar" aria-label="Principal">
       <!-- Logo y marca -->
-      <RouterLink class="link-navbar home" to="/" @click="closeMobileMenu">
-        <div class="brand-container">
-          <div class="brand-info">
-            <div class="brand-title">Data.Or<span class="highlight">Company</span></div>
-          </div>
-        </div>
+      <RouterLink class="logo" to="/" @click="closeMobileMenu">
+        <img src="/images/logo2.jpeg" alt="Data.Or Technological Services" class="logo-image-rounded" />
       </RouterLink>
 
       <!-- Navegación principal -->
       <div class="nav-menu desktop-nav">
-        <a href="#numbers" class="nav-link" @click="closeMobileMenu(); scrollToNumbers()">Participa Ahora</a>
-        <a href="#faq" class="nav-link " @click="closeMobileMenu">¿Preguntas?</a>
+        <RouterLink to="/" class="nav-link">Inicio</RouterLink>
+        <a href="#servicios" class="nav-link">Servicios</a>
+        <a href="#nosotros" class="nav-link">Nosotros</a>
+        <a href="#proyectos" class="nav-link">Proyectos</a>
+        <a href="#hablemos" class="nav-link">Contacto</a>
       </div>
 
       <!-- Controles de usuario -->
       <div class="nav-controls desktop-nav">
+  <a href="#hablemos" class="btn demo-btn"><span class="demo-text">Solicita un<br>demo</span></a>
         <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder</RouterLink>
         <RouterLink v-if="isLoggedIn && isAdmin" class="btn admin-btn" to="/admin">⚙️ Panel Admin</RouterLink>
         <RouterLink v-if="isLoggedIn" @click="logout" class="btn logout-btn" to="/">Cerrar sesión</RouterLink>
@@ -26,22 +27,26 @@
         </div>
       </div>
 
-      <!-- Menu hamburguesa para mobile -->
+  <!-- Menu hamburguesa para mobile -->
       <button class="hamburger-menu" @click="toggleMobileMenu" :class="{ 'active': isMobileMenuOpen }">
         <span></span>
         <span></span>
         <span></span>
-      </button>
+  </button>
 
-      <!-- Menu mobile desplegable -->
+  <!-- Menu mobile desplegable -->
       <div class="mobile-menu" :class="{ 'active': isMobileMenuOpen }">
         <div class="mobile-menu-content">
           <div class="mobile-nav-links">
-            <a href="#numbers" class="mobile-link" @click="closeMobileMenu; scrollToNumbers()">Números</a>
-            <a href="#compartir" class="mobile-link" @click="closeMobileMenu">Compartir</a>
+            <RouterLink to="/" class="mobile-link" @click="closeMobileMenu">Inicio</RouterLink>
+            <a href="#servicios" class="mobile-link" @click="closeMobileMenu">Servicios</a>
+            <a href="#nosotros" class="mobile-link" @click="closeMobileMenu">Nosotros</a>
+            <a href="#proyectos" class="mobile-link" @click="closeMobileMenu">Proyectos</a>
+            <a href="#contacto" class="mobile-link" @click="closeMobileMenu">Contacto</a>
           </div>
 
           <div class="mobile-controls">
+            <a href="#hablemos" class="mobile-btn demo-btn" @click="closeMobileMenu"><span class="demo-text">Solicita un<br>demo</span></a>
             <RouterLink v-if="!isLoggedIn" class="mobile-btn access-btn" to="/login" @click="closeMobileMenu">
               Acceder
             </RouterLink>
@@ -57,25 +62,32 @@
           </div>
         </div>
       </div>
-    </nav>
+      </nav>
+    </div>
   </header>
 
   <RouterView />
 
   <!-- Botones flotantes de redes sociales -->
   <SocialFloating />
+  <div class="cursor-dot" ref="cursorDot" aria-hidden="true"></div>
 </template>
 
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router';
 import { authService } from '@/services/api';
-import { onMounted, ref, watch, computed } from 'vue';
+import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue';
 import router from './router';
 import SocialFloating from '@/components/SocialFloating.vue';
 
 const isLoggedIn = ref(false);
 const username = ref('');
 const isMobileMenuOpen = ref(false);
+const isScrolled = ref(false);
+const cursorDot = ref<HTMLDivElement|null>(null);
+let dotRAF:number|undefined
+let targetX = 0, targetY = 0
+let currentX = 0, currentY = 0
 
 // Verificar si el usuario es administrador
 const isAdmin = computed(() => authService.isAdmin());
@@ -87,17 +99,6 @@ const toggleMobileMenu = () => {
 
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
-};
-
-// Función para hacer scroll a la sección de números
-const scrollToNumbers = () => {
-  const numbersSection = document.getElementById('number-selection');
-  if (numbersSection) {
-    numbersSection.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
-  }
 };
 
 const checkAuthStatus = () => {
@@ -117,8 +118,25 @@ const logout = () => {
   router.push('/');
 };
 
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 10;
+};
+
 onMounted(() => {
   checkAuthStatus();
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  handleScroll();
+  const move = (e:MouseEvent)=>{ targetX = e.clientX; targetY = e.clientY }
+  window.addEventListener('mousemove', move, { passive:true })
+  const animate=()=>{ currentX += (targetX - currentX)*0.18; currentY += (targetY - currentY)*0.18; if(cursorDot.value){ cursorDot.value.style.transform = `translate3d(${currentX}px,${currentY}px,0)` } dotRAF = requestAnimationFrame(animate) }
+  dotRAF = requestAnimationFrame(animate)
+  // accesibilidad: ocultar si user prefiere movimiento reducido
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches && cursorDot.value){ cursorDot.value.style.display='none' }
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll);
+  if(dotRAF) cancelAnimationFrame(dotRAF)
 });
 
 const route = useRoute();
@@ -128,100 +146,57 @@ watch(route, () => {
 </script>
 
 <style scoped>
+.cursor-dot { position:fixed; top:0; left:0; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; pointer-events:none; z-index:4000; background:radial-gradient(circle at 30% 30%, #7df0ff, #32b8ff 55%, #0066ff 100%); mix-blend-mode:screen; filter:blur(0.5px) drop-shadow(0 0 8px rgba(70,190,255,.75)); transition:opacity .35s ease; }
+@media (max-width:820px){ .cursor-dot { display:none; } }
+
+/* Navbar interno (contenedor de elementos) */
 .navbar {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  margin: 0;
+  display: flex;
+  align-items: center;
   width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  height: 70px;
-  padding: 0 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
+  gap: 48px;
 }
 
-/* Logo y marca */
-.brand-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+/* Línea solo por enlace (se elimina la barra global) */
 
-.logo-circle {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-  transition: all 0.3s ease;
-}
-
-.logo-circle:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-}
-
-.brand-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.brand-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #ffffff;
-  line-height: 1.2;
-  margin: 0;
-}
-
-.brand-title .highlight {
-  color: #60a5fa;
-  text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
-}
-
-.brand-subtitle {
-  font-size: 12px;
-  color: #94a3b8;
-  font-weight: 500;
-  line-height: 1;
-  margin: 0;
-}
+/* (Estilos de logo removidos; ahora se usan clases globales en global.css) */
 
 /* Navegación principal */
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 40px;
   margin-left: auto;
-  margin-right: 30px;
+  margin-right: 20px;
 }
 
 .nav-link {
-  color: #e2e8f0;
+  color: #fdfdfd;
   text-decoration: none;
-  font-weight: 500;
-  font-size: 16px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  font-weight: 400;
+  font-size: 15px;
+  padding: 6px 0;
   position: relative;
+  letter-spacing: .2px;
+  transition: color .25s ease, text-shadow .35s ease;
 }
 
+.nav-link::after {content:"";position:absolute;left:50%;bottom:-6px;width:0;height:3px;background:linear-gradient(90deg,#00e4ff 0%,#4fdcff 20%,#60b8ff 45%,#4d8dff 70%,#7f7bff 100%);border-radius:3px;box-shadow:0 0 8px rgba(0,228,255,.65),0 0 18px rgba(127,123,255,.45);transition:width .35s ease,left .35s ease;opacity:.95}
+
 .nav-link:hover {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
+  color: #d9e2ec;
 }
+
+.nav-link:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+.nav-link.active {
+  color: #e6fbff;
+  text-shadow: 0 0 6px rgba(0,228,255,.75), 0 0 14px rgba(127,123,255,.55);
+}
+
 
 .share-btn {
   background: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%);
@@ -257,6 +232,50 @@ watch(route, () => {
   justify-content: center;
 }
 
+.demo-btn {
+  position: relative;
+  background: rgba(255,255,255,0.08);
+  color: #f5f9fb;
+  border-radius: 46px;
+  padding: 12px 28px;
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.18);
+  cursor: pointer;
+  letter-spacing: .25px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05);
+  transition: background .35s ease, box-shadow .35s ease, transform .28s ease, color .3s ease;
+}
+
+.demo-btn .demo-text {
+  display: inline-block;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.demo-btn::after { /* sutil brillo interior */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(140deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 65%);
+  opacity: .15;
+  pointer-events: none;
+}
+
+.demo-btn:hover {
+  background: rgba(255,255,255,0.14);
+  box-shadow: 0 6px 20px -8px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08);
+  transform: translateY(-3px);
+}
+
+.demo-btn:active {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.18);
+  box-shadow: 0 3px 12px -4px rgba(0,0,0,0.6);
+}
+
 .access-btn {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
@@ -282,13 +301,13 @@ watch(route, () => {
 }
 
 .admin-btn {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #4d0ee0 0%, #100325 100%);
   color: #ffffff;
   box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
 }
 
 .admin-btn:hover {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #5a0fdb 0%, #0b011b 100%);
   box-shadow: 0 4px 15px rgba(139, 92, 246, 0.5);
   transform: translateY(-2px);
 }
@@ -439,9 +458,8 @@ watch(route, () => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .navbar {
-    height: 70px;
-    padding: 0 20px;
+  .header {
+    padding: .6rem 0;
   }
 
   .desktop-nav {
@@ -456,38 +474,11 @@ watch(route, () => {
     display: block;
   }
 
-  .brand-title {
-    font-size: 18px;
-  }
-
-  .brand-subtitle {
-    font-size: 11px;
-  }
-
-  .logo-circle {
-    width: 45px;
-    height: 45px;
-    font-size: 20px;
-  }
 }
 
 @media (max-width: 480px) {
-  .navbar {
-    padding: 0 15px;
-  }
-
-  .brand-container {
-    gap: 10px;
-  }
-
-  .brand-title {
-    font-size: 16px;
-  }
-
-  .logo-circle {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
+  .header {
+    padding: .5rem 0;
   }
 }
 

@@ -5,12 +5,7 @@
       <!-- Header -->
       <div class="dashboard-header">
         <h1>Panel de Administración</h1>
-        <p>Gestión de compras de wallpapers NS200</p>
-        <button @click="refreshData" :disabled="isLoadingPurchases || isRefreshingWallpapers" class="refresh-btn">
-          <span v-if="isLoadingPurchases || isRefreshingWallpapers">🔄</span>
-          <span v-else>↻</span>
-          {{ isRefreshingWallpapers ? 'Actualizando...' : 'Actualizar' }}
-        </button>
+
       </div>
 
       <!-- Error Message -->
@@ -19,223 +14,112 @@
         <button @click="error = null" class="close-error">×</button>
       </div>
 
-      <!-- Loading State -->
-      <div v-if="isLoadingPurchases && purchases.length === 0" class="loading-state">
-        <div class="loading-spinner"></div>
-        <p>Cargando compras...</p>
-      </div>
+
 
       <!-- Dashboard Content -->
       <div v-else class="dashboard-content">
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-          <div class="stat-card total">
-            <div class="stat-icon">📊</div>
-            <div class="stat-content">
-              <h3>Total Compras</h3>
-              <p class="stat-number">{{ stats.totalPurchases }}</p>
-            </div>
+        <!-- Company Static Stats (Hardcoded) -->
+        <div class="company-stats-section">
+          <div class="section-head">
+            <h2>📈 Visión General Empresa (Estático)</h2>
+            <p>Datos de ejemplo para proyectos y equipo (placeholder)</p>
           </div>
-
-          <div class="stat-card revenue">
-            <div class="stat-icon">💰</div>
-            <div class="stat-content">
-              <h3>Ingresos Aprobados</h3>
-              <p class="stat-number">${{ stats.totalRevenue.toLocaleString() }} COP</p>
-            </div>
-          </div>
-
-          <div class="stat-card wallpapers">
-            <div class="stat-icon">🖼️</div>
-            <div class="stat-content">
-              <h3>Wallpapers</h3>
-              <p class="stat-number">{{ stats.totalWallpapersSold }}</p>
-            </div>
-          </div>
-
-          <div class="stat-card pending">
-            <div class="stat-icon">⏳</div>
-            <div class="stat-content">
-              <h3>Pendientes</h3>
-              <p class="stat-number">{{ stats.pendingPurchases }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Winner Selection Section -->
-        <div class="winner-selection-section">
-          <div class="winner-header">
-            <h3>🎯 Selección del Número Ganador</h3>
-            <p>Genera el número ganador de entre los wallpapers pagados/aprobados</p>
-          </div>
-
-          <div class="winner-stats">
-            <div class="eligible-numbers">
-              <span class="stat-label">Wallpapers Vendidos - Números Elegibles:</span>
-              <span class="stat-value">{{ eligibleNumbers.length }}</span>
-            </div>
-
-          </div>
-
-          <div class="winner-game-container">
-            <div v-if="!isGameStarted && !winnerNumber" class="game-start">
-              <button
-                @click="startWinnerGame"
-                :disabled="eligibleNumbers.length === 0 || isGameRunning"
-                class="start-game-btn"
-              >
-                🎲 Iniciar Dinámica
-              </button>
-              <p class="game-hint">
-                Se realizarán 5 intentos antes de revelar el ganador
-                <br>
-                <small v-if="eligibleNumbers.length < 5" class="warning-text">
-                  ⚠️ Solo hay {{ eligibleNumbers.length }} números únicos - algunos números pueden repetirse
-                </small>
-                <small v-else class="success-text">
-                  ✅ {{ eligibleNumbers.length }} números únicos disponibles
-                </small>
-              </p>
-            </div>
-
-            <div v-if="isGameStarted" class="game-active">
-              <div class="attempts-container">
-                <h4>Intentos: {{ currentAttempt }}/5</h4>
-                <div class="attempts-display">
-                  <div
-                    v-for="(attempt, index) in attempts"
-                    :key="index"
-                    class="attempt-number"
-                    :class="{
-                      'current': index === currentAttempt - 1 && !isGameComplete,
-                      'revealed': index < currentAttempt - 1 || isGameComplete,
-                      'spinning': isShowingSpinEffect && index === currentAttempt - 1
-                    }"
-                  >
-                    {{ isShowingSpinEffect && index === currentAttempt - 1 ? (spinningNumbers[index] || '?') : (attempt || '?') }}
-                  </div>
-                </div>
+          <div class="company-stats-grid">
+            <div class="cstat-card total-projects">
+              <div class="cstat-icon">🗂️</div>
+              <div class="cstat-content">
+                <h4>Proyectos Totales</h4>
+                <p class="cstat-number">{{ companyStats.totalProjects }}</p>
+                <small>{{ companyStats.completedProjects }} completados</small>
               </div>
-
-              <div class="game-controls">
-                <button
-                  v-if="currentAttempt <= 5 && !isGameComplete"
-                  @click="nextAttempt"
-                  :disabled="isProcessingAttempt"
-                  class="next-attempt-btn"
-                >
-                  {{ isProcessingAttempt ? '🎯 Generando...' : (currentAttempt === 5 ? '🏆 Revelar Ganador' : `🎯 Intento ${currentAttempt}`) }}
-                </button>
+            </div>
+            <div class="cstat-card employees">
+              <div class="cstat-icon">👥</div>
+              <div class="cstat-content">
+                <h4>Empleados</h4>
+                <p class="cstat-number">{{ companyStats.employees }}</p>
+                <small>{{ companyStats.hiringOpenings }} vacantes abiertas</small>
               </div>
-
-              <div v-if="isGameComplete && winnerNumber" class="winner-reveal">
-                <div class="winner-announcement">
-                  <h2>🎉 ¡NÚMERO GANADOR! 🎉</h2>
-                  <div class="winner-number-display">
-                    #{{ winnerNumber }}
-                  </div>
-                  <div v-if="winnerPurchase" class="winner-details">
-                    <h4>Detalles del Ganador:</h4>
-                    <p><strong>Cliente:</strong> {{ winnerPurchase.buyerName }}</p>
-                    <p><strong>Email:</strong> {{ winnerPurchase.buyerEmail }}</p>
-                    <p><strong>Fecha de Compra:</strong> {{ formatDate(winnerPurchase.createdAt) }}</p>
-                  </div>
-                </div>
-
-                <button @click="resetGame" class="reset-game-btn">
-                  🔄 Nueva Dinámica
-                </button>
+            </div>
+            <div class="cstat-card in-progress">
+              <div class="cstat-icon">⚙️</div>
+              <div class="cstat-content">
+                <h4>En Progreso</h4>
+                <p class="cstat-number">{{ companyStats.inProgress }}</p>
+                <small>{{ companyStats.thisQuarterDeliveries }} entregas este trimestre</small>
+              </div>
+            </div>
+            <div class="cstat-card future">
+              <div class="cstat-icon">🚀</div>
+              <div class="cstat-content">
+                <h4>Proyectos Futuros</h4>
+                <p class="cstat-number">{{ companyStats.future }}</p>
+                <small>{{ companyStats.discoveryStage }} en discovery</small>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Status Filter -->
-        <div class="filter-section">
-          <div class="filter-header">
-            <h3>Filtrar por Estado</h3>
-            <button @click="refreshData" :disabled="isLoadingPurchases || isRefreshingWallpapers" class="refresh-btn"
-              title="Refrescar datos">
-              <span v-if="isRefreshingWallpapers">🔄</span>
-              <span v-else>🔄</span>
-              {{ isRefreshingWallpapers ? 'Actualizando...' : 'Refrescar' }}
-            </button>
-          </div>
-          <div class="status-filters">
-            <button @click="selectedStatus = 'ALL'" :class="['filter-btn', { active: selectedStatus === 'ALL' }]">
-              Todos ({{ purchases.length }})
-            </button>
-            <button @click="selectedStatus = 'PENDING'"
-              :class="['filter-btn', 'pending', { active: selectedStatus === 'PENDING' }]">
-              Pendientes ({{ purchasesByStatus.PENDING.length }})
-            </button>
-            <button @click="selectedStatus = 'APPROVED'"
-              :class="['filter-btn', 'approved', { active: selectedStatus === 'APPROVED' }]">
-              Aprobadas ({{ purchasesByStatus.APPROVED.length }})
-            </button>
-            <button @click="selectedStatus = 'REJECTED'"
-              :class="['filter-btn', 'rejected', { active: selectedStatus === 'REJECTED' }]">
-              Rechazadas ({{ purchasesByStatus.REJECTED.length }})
-            </button>
-            <button @click="selectedStatus = 'CANCELLED'"
-              :class="['filter-btn', 'cancelled', { active: selectedStatus === 'CANCELLED' }]">
-              Canceladas ({{ purchasesByStatus.CANCELLED.length }})
-            </button>
-          </div>
-        </div>
-
-        <!-- Purchases Table -->
-        <div class="purchases-section">
-          <h3>Lista de Compras</h3>
-
-          <div v-if="filteredPurchases.length === 0" class="no-purchases">
-            <p>No hay compras {{ selectedStatus === 'ALL' ? '' : selectedStatus.toLowerCase() }} para mostrar.</p>
-          </div>
-
-          <div v-else class="purchases-table-container">
-            <table class="purchases-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Cliente</th>
-                  <th>Email</th>
-                  <th>Contacto</th>
-                  <th>Wallpapers</th>
-                  <th>Monto</th>
-                  <th>Estado</th>
-                  <th>Fecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="purchase in filteredPurchases" :key="purchase.id"
-                  :class="`purchase-row ${purchase.status.toLowerCase()}`">
-                  <td class="purchase-id">#{{ purchase.id }}</td>
-                  <td class="buyer-name">{{ purchase.buyerName }}</td>
-                  <td class="buyer-email">{{ purchase.buyerEmail }}</td>
-                  <td class="buyer-contact">{{ purchase.buyerContactNumber || 'No proporcionado' }}</td>
-                  <td class="wallpapers">
-                    <div class="wallpaper-numbers">
-                      <span v-for="number in purchase.wallpaperNumbers" :key="number" class="wallpaper-tag">
-                        #{{ number }}
-                      </span>
-                    </div>
-                    <small class="wallpaper-count">{{ purchase.wallpaperNumbers.length }} wallpaper(s)</small>
-                  </td>
-                  <td class="amount">${{ purchase.amount.toLocaleString() }} {{ purchase.currency }}</td>
-                  <td class="status">
-                    <span :class="`status-badge ${purchase.status.toLowerCase()}`">
-                      {{ getStatusText(purchase.status) }}
-                    </span>
-                  </td>
-                  <td class="date">{{ formatDate(purchase.createdAt) }}</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="projects-panels">
+            <div class="panel mini-chart">
+              <h4>Tendencia de Proyectos (Mock)</h4>
+              <div class="sparkline">
+                <div v-for="(v,i) in mockTrend" :key="i" class="bar" :style="{ height: v + '%'}"></div>
+              </div>
+              <ul class="legend">
+                <li><span class="dot completed"></span>Completados</li>
+                <li><span class="dot inprogress"></span>En Progreso</li>
+                <li><span class="dot future"></span>Futuros</li>
+              </ul>
+            </div>
+            <div class="panel projects-table-panel">
+              <h4>Proyectos (Top 6 Demo)</h4>
+              <table class="projects-table">
+                <thead>
+                  <tr>
+                    <th>Proyecto</th>
+                    <th>Estado</th>
+                    <th>Responsable</th>
+                    <th>ETA</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="p in projectListComputed" :key="p.id">
+                    <td class="p-name">{{ p.name }}</td>
+                    <td><span :class="'p-badge status-' + p.status">{{ p.statusLabel }}</span></td>
+                    <td class="p-owner">{{ p.owner }}</td>
+                    <td class="p-eta">{{ p.eta }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="panel focus-panel">
+              <h4>Enfoque Actual</h4>
+              <ul class="focus-list">
+                <li v-for="f in focusItems" :key="f.label">
+                  <span class="fi-label">{{ f.label }}</span>
+                  <span class="fi-badge" :class="'prio-' + f.prio">{{ f.prio.toUpperCase() }}</span>
+                </li>
+              </ul>
+              <p class="note">Estos datos son demostrativos y no representan métricas reales.</p>
+            </div>
           </div>
         </div>
+
+
+
+
+
+
+
+
+        </div>
+
+
+
+
       </div>
     </div>
-  </div>
+
 </template>
 
 <script setup lang="ts">
@@ -281,6 +165,39 @@ const isGameRunning = ref(false)
 const isProcessingAttempt = ref(false)
 const isShowingSpinEffect = ref(false)
 const spinningNumbers = ref<(number | null)[]>([null, null, null, null, null])
+
+// ================== MOCK COMPANY DASHBOARD (Hardcoded) ==================
+const companyStats = ref({
+  totalProjects: 32,
+  completedProjects: 18,
+  employees: 14,
+  hiringOpenings: 3,
+  inProgress: 9,
+  thisQuarterDeliveries: 5,
+  future: 12,
+  discoveryStage: 4
+})
+
+interface ProjectRow { id:number; name:string; status:'completed'|'inprogress'|'paused'|'future'; owner:string; eta:string }
+const projectList = ref<ProjectRow[]>([
+  { id:1, name:'Plataforma Data Lake', status:'inprogress', owner:'María', eta:'Oct 2025' },
+  { id:2, name:'API Facturación v2', status:'completed', owner:'Carlos', eta:'Ago 2025' },
+  { id:3, name:'Módulo IA Recomendador', status:'inprogress', owner:'Lucía', eta:'Nov 2025' },
+  { id:4, name:'Portal Clientes NextGen', status:'future', owner:'(Asignar)', eta:'Q1 2026' },
+  { id:5, name:'Migración Monolito', status:'paused', owner:'Diego', eta:'En revisión' },
+  { id:6, name:'Pipeline Streaming', status:'completed', owner:'Elena', eta:'Jul 2025' },
+])
+const statusLabels:Record<string,string> = { completed:'Completado', inprogress:'En Progreso', paused:'En Pausa', future:'Futuro' }
+const projectListComputed = computed(()=> projectList.value.map(p=> ({ ...p, statusLabel: statusLabels[p.status] || p.status })))
+// Ajustar template para usar projectListComputed si se necesitara evolución; por simplicidad usamos projectList y transformamos en render
+const focusItems = ref([
+  { label:'Optimizar costos cloud', prio:'alta' },
+  { label:'Reducir tiempo onboarding datos', prio:'media' },
+  { label:'Pipelines CI/CD analítica', prio:'alta' },
+  { label:'Discovery portal clientes', prio:'media' },
+  { label:'Definir KPIs producto IA', prio:'baja' },
+])
+const mockTrend = ref([55,68,60,74,62,80,77,83,70,88,91,86])
 
 // Compras filtradas
 const filteredPurchases = computed(() => {
@@ -485,6 +402,7 @@ onMounted(async () => {
   text-align: center;
   margin-bottom: 3rem;
   position: relative;
+  margin-top: 3rem;
 }
 
 .dashboard-header h1 {
@@ -1186,6 +1104,61 @@ onMounted(async () => {
   font-size: 0.9rem;
   color: #94a3b8;
   white-space: nowrap;
+}
+
+/* ================== COMPANY STATIC DASHBOARD (Hardcoded) ================== */
+.company-stats-section { background:rgba(30,41,59,0.55); border:1px solid rgba(96,165,250,0.18); padding:2rem; border-radius:18px; display:flex; flex-direction:column; gap:2rem; }
+.company-stats-section .section-head h2 { margin:0 0 .4rem; font-size:1.8rem; font-weight:700; background:linear-gradient(90deg,#fff,#cbd5e1); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.company-stats-section .section-head p { margin:0; color:#94a3b8; font-size:.9rem; }
+.company-stats-grid { display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+.cstat-card { position:relative; background:linear-gradient(135deg,rgba(15,23,42,0.75),rgba(51,65,85,0.7)); border:1px solid rgba(96,165,250,0.18); border-radius:16px; padding:1.1rem 1rem 1.2rem; display:flex; gap:.9rem; align-items:flex-start; overflow:hidden; transition:.35s ease; }
+.cstat-card:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 20% 15%,rgba(96,165,250,0.25),transparent 60%); opacity:.55; pointer-events:none; mix-blend-mode:overlay; }
+.cstat-card:hover { transform:translateY(-4px); border-color:rgba(96,165,250,0.4); box-shadow:0 10px 28px -6px rgba(0,0,0,0.45); }
+.cstat-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.35rem; background:linear-gradient(135deg,#3b82f6,#1d4ed8); box-shadow:0 4px 14px -3px rgba(59,130,246,0.55); flex-shrink:0; }
+.cstat-card.employees .cstat-icon { background:linear-gradient(135deg,#ec4899,#db2777); box-shadow:0 4px 14px -3px rgba(236,72,153,0.55); }
+.cstat-card.in-progress .cstat-icon { background:linear-gradient(135deg,#f59e0b,#b45309); box-shadow:0 4px 14px -3px rgba(245,158,11,0.55); }
+.cstat-card.future .cstat-icon { background:linear-gradient(135deg,#10b981,#059669); box-shadow:0 4px 14px -3px rgba(16,185,129,0.55); }
+.cstat-content h4 { margin:0 0 .25rem; font-size:.78rem; letter-spacing:.12em; font-weight:600; text-transform:uppercase; color:#94a3b8; }
+.cstat-number { margin:0 0 .15rem; font-size:1.55rem; font-weight:700; color:#fff; line-height:1.05; }
+.cstat-content small { font-size:.65rem; letter-spacing:.08em; color:#9ca9b7; }
+
+.projects-panels { display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+.panel { background:rgba(15,23,42,0.55); border:1px solid rgba(96,165,250,0.18); border-radius:18px; padding:1.2rem 1rem 1.3rem; position:relative; overflow:hidden; display:flex; flex-direction:column; gap:.9rem; }
+.panel h4 { margin:0 0 .2rem; font-size:.95rem; font-weight:700; letter-spacing:.5px; color:#fff; }
+.mini-chart .sparkline { display:flex; align-items:flex-end; gap:3px; height:90px; margin-top:.4rem; }
+.mini-chart .sparkline .bar { flex:1; background:linear-gradient(180deg,#60a5fa,#2563eb); border-radius:4px 4px 2px 2px; transition:.3s ease; position:relative; }
+.mini-chart .sparkline .bar:hover { filter:brightness(1.1); transform:translateY(-4px); }
+.legend { list-style:none; display:flex; gap:.9rem; margin:.6rem 0 0; padding:0; flex-wrap:wrap; }
+.legend li { font-size:.62rem; letter-spacing:.12em; color:#94a3b8; display:flex; align-items:center; gap:.35rem; }
+.legend .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.legend .dot.completed { background:#10b981; }
+.legend .dot.inprogress { background:#3b82f6; }
+.legend .dot.future { background:#f59e0b; }
+
+.projects-table-panel { overflow:hidden; }
+.projects-table { width:100%; border-collapse:collapse; font-size:.72rem; }
+.projects-table th { text-align:left; padding:.6rem .65rem; background:rgba(30,41,59,0.6); font-weight:600; letter-spacing:.12em; font-size:.6rem; color:#93a3b6; text-transform:uppercase; border-bottom:1px solid rgba(96,165,250,0.18); }
+.projects-table td { padding:.55rem .65rem; border-bottom:1px solid rgba(96,165,250,0.09); color:#d2dde7; }
+.p-name { font-weight:600; color:#fff; }
+.p-owner { color:#b9c6d3; font-size:.65rem; }
+.p-eta { font-size:.65rem; color:#9ca9b7; }
+.p-badge { display:inline-block; padding:.35rem .55rem .3rem; border-radius:14px; font-size:.55rem; letter-spacing:.12em; font-weight:600; text-transform:uppercase; background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.25); }
+.p-badge.status-completed { background:rgba(16,185,129,0.2); color:#10b981; border-color:rgba(16,185,129,0.35); }
+.p-badge.status-inprogress { background:rgba(59,130,246,0.22); color:#3b82f6; border-color:rgba(59,130,246,0.38); }
+.p-badge.status-paused { background:rgba(234,179,8,0.22); color:#eab308; border-color:rgba(234,179,8,0.4); }
+.p-badge.status-future { background:rgba(245,158,11,0.22); color:#f59e0b; border-color:rgba(245,158,11,0.4); }
+
+.focus-panel .focus-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.55rem; }
+.focus-panel .focus-list li { display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); padding:.6rem .7rem; border-radius:12px; backdrop-filter:blur(4px); }
+.fi-label { font-size:.65rem; font-weight:600; letter-spacing:.04em; color:#d7e2ec; }
+.fi-badge { font-size:.55rem; letter-spacing:.15em; font-weight:700; padding:.32rem .55rem .28rem; border-radius:12px; background:rgba(96,165,250,0.18); color:#60a5fa; border:1px solid rgba(96,165,250,0.32); }
+.fi-badge.prio-alta { background:rgba(239,68,68,0.25); color:#ef4444; border-color:rgba(239,68,68,0.45); }
+.fi-badge.prio-media { background:rgba(245,158,11,0.25); color:#f59e0b; border-color:rgba(245,158,11,0.45); }
+.fi-badge.prio-baja { background:rgba(16,185,129,0.25); color:#10b981; border-color:rgba(16,185,129,0.45); }
+.focus-panel .note { margin:.7rem 0 0; font-size:.58rem; letter-spacing:.12em; color:#7e8b96; text-transform:uppercase; }
+
+@media (max-width: 880px){
+  .projects-panels { grid-template-columns:1fr; }
 }
 
 /* Responsive */
