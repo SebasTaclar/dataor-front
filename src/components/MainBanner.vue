@@ -1,670 +1,210 @@
 <template>
-  <section class="hero-rifa">
-    <!-- Galería de fotos de la moto -->
-    <div class="moto-gallery-section">
-      <div class="gallery-container">
-        <div class="gallery-header">
-          <h1>Gana una <span class="highlight-blue">Pulsar</span> con tu</h1>
-          <h1>número de la suerte</h1>
+ <section class="hero" id="inicio">
+        <div class="hero-layout">
+            <div class="hero-copy" data-aos="fade-right">
+                <!-- <div class="eyebrow">PLATAFORMA DATA · SOFTWARE · IA</div> -->
+                <h1>Impulsa tu negocio con datos accionables y software escalable</h1>
+                <p class="hero-lead">Diseñamos soluciones de analítica, desarrollo y arquitectura digital que aceleran decisiones, optimizan procesos y generan ventajas competitivas reales.</p>
+          <div class="hero-actions">
+          <a href="#servicios" class="cta-large">Ver soluciones</a>
+          <a href="#contacto" class="btn-ghost">Hablemos</a>
         </div>
-
-        <!-- Galería horizontal en .horizontal-gallery -->
-        <div
-          class="horizontal-gallery"
-          ref="galleryRef"
-          @touchstart="handleTouchStart"
-          @touchmove="handleTouchMove"
-          @touchend="handleTouchEnd"
-        >
-          <div
-            v-for="(image, index) in motoImages"
-            :key="index"
-            class="gallery-image-item"
-            :class="{ 'active': currentImageIndex === index }"
-            @click="goToImage(index)">
-            <div class="image-wrapper">
-              <img :src="image.src"  />
-              <div class="image-overlay">
-                <div class="image-info">
-                  <h3>{{ image.title }}</h3>
-
+                <div class="badges">
+                    <span class="badge">Analytics</span>
+                    <span class="badge">Arquitectura</span>
+                    <span class="badge">Automatización</span>
+                    <span class="badge">IA</span>
                 </div>
-              </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Navegación con flechas a los lados -->
-        <div class="gallery-navigation">
-          <button class="gallery-nav-arrow gallery-prev" @click="prevImage">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15,18 9,12 15,6"></polyline>
-            </svg>
-          </button>
-          <button class="gallery-nav-arrow gallery-next" @click="nextImage">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9,18 15,12 9,6"></polyline>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Contenido centrado debajo de la galería -->
-        <div class="content-wrapper">
-          <div class="description">
-            <p>Elige tus números, confirma y guarda tu comprobante. Dinámica transparente y regulado por reglas claras.</p>
-          </div>
-          <!-- Botones de acción -->
-          <div class="action-buttons">
-            <button class="btn-primary" @click="selectNumbers">Elegir números</button>
-            <button class="btn-secondary" @click="viewRules">Ver reglas</button>
-          </div>
-           <!-- Estadísticas -->
-          <div class="stats-section">
-            <div class="stat-card">
-              <div class="stat-value">$ 15.000</div>
-              <div class="stat-label">por número</div>
+            <div class="hero-panel" data-aos="fade-left" data-aos-delay="150">
+                <div class="metrics-card">
+                    <div class="panel-title">Impacto en Números</div>
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <h4>Proyectos</h4>
+                            <div class="value">+50</div>
+                            <small>Implementados</small>
+                        </div>
+                        <div class="metric">
+                            <h4>Eficiencia</h4>
+                            <div class="value">+38%</div>
+                            <small>Promedio clientes</small>
+                        </div>
+                        <div class="metric">
+                            <h4>Disponibilidad</h4>
+                            <div class="value">99.9%</div>
+                            <small>Infraestructura</small>
+                        </div>
+                        <div class="metric">
+                            <h4>Ahorro</h4>
+                            <div class="value">-27%</div>
+                            <small>Costos operativos</small>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="font-size:.75rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,.7); margin-bottom:.4rem;">Actividad</h4>
+                        <div class="activity-bars" aria-hidden="true">
+                          <span v-for="(b,i) in barCount" :key="i" class="activity-bar" :style="barAnimStyle(i)"></span>
+                        </div>
+                        <div class="note" style="margin-top:.6rem;">Métricas simuladas para demostración visual</div>
+                    </div>
+                </div>
             </div>
-          <div class="stat-card">
-            <div class="stat-value">{{ availabilityText }}</div>
-            <div class="stat-label">disponibles</div>
-          </div>
         </div>
-        </div> <!-- Cierre content-wrapper -->
-      </div>
-    </div>
-  </section>
+    </section>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
-
-// Definir emits
-interface Emits {
-  (e: 'showRules'): void
+// Simulación barras actividad
+const barCount = 8
+const barAnimStyle = (i: number) => {
+  const min = 0.25 + ((i * 7) % 10) / 100
+  const max = 0.55 + ((i * 11) % 30) / 100
+  return { '--delay': `${(i * 0.28).toFixed(2)}s`, '--min': min.toFixed(2), '--max': max.toFixed(2) }
 }
-
-const emit = defineEmits<Emits>()
-
-// Usar el composable de disponibilidad
-const {
-  availabilityText,
-  // getAvailableNumbersArray
-} = useNumbersAvailability()
-
-// // Función para simular más ventas (demo)
-// const simulateMoreSales = () => {
-//   const available = getAvailableNumbersArray()
-//   if (available.length > 5) {
-//     // Simular venta de 3-7 números aleatorios
-//     const numToSell = Math.floor(Math.random() * 5) + 3
-//     const soldNumbers = []
-
-//     for (let i = 0; i < numToSell && i < available.length; i++) {
-//       const randomIndex = Math.floor(Math.random() * available.length)
-//       soldNumbers.push(available[randomIndex])
-//       addTakenNumber(available[randomIndex])
-//       available.splice(randomIndex, 1)
-//     }
-
-//     alert(`Demo: Se simuló la venta de ${soldNumbers.length} números: ${soldNumbers.join(', ')}`)
-//   } else {
-//     alert('Demo: No hay suficientes números disponibles para simular más ventas')
-//   }
-// }
-
-// // Función para resetear la demo
-// const resetDemo = () => {
-//   resetToDefaults()
-//   alert('Demo: Números resetados a los valores por defecto')
-// }
-
-// // Función para limpiar la demo
-// const clearDemo = () => {
-//   if (confirm('¿Estás seguro de que quieres limpiar todos los números reservados?')) {
-//     clearAllReserved()
-//     alert('Demo: Todos los números han sido liberados')
-//   }
-// }
-
-// Datos de las imágenes de la moto
-const motoImages = ref([
-  {
-    src: '/images/ns200_slide1.jpeg',
-    title: 'Moto NS200s',
-  },
-  {
-    src: '/images/ns200_slide2.jpeg',
-    title: 'Diseño agresivo frontal',
-  },
-  {
-    src: '/images/ns200_slide3.jpg',
-    title: 'Perfil deportivo completo',
-  },
-  {
-    src: '/images/ns200_slide4.jpeg',
-    title: 'Diseño deportivo',
-  },
-  {
-    src: '/images/ns200_slide5.jpg',
-    title: 'Alta tecnología',
-  },
-  {
-    src: '/images/ns200_slide6.jpg',
-    title: 'Tecnología avanzada',
-  },
-  {
-    src: '/images/ns200_slide7.jpeg',
-    title: 'Sistema amigable',
-  }
-])
-
-const currentImageIndex = ref(0)
-const galleryRef = ref<HTMLElement | null>(null)
-
-// Variables para gestos táctiles
-const touchStartX = ref(0)
-const touchStartY = ref(0)
-const isDragging = ref(false)
-const startScrollLeft = ref(0)
-const lastTouchX = ref(0)
-const lastTouchTime = ref(0)
-const velocityX = ref(0)
-
-// Funciones para el carousel de imágenes con scroll horizontal optimizado
-const nextImage = () => {
-  if (galleryRef.value) {
-    const isMobile = window.innerWidth <= 768
-    const scrollAmount = isMobile ? galleryRef.value.clientWidth * 0.85 : 420
-
-    // Scroll más rápido y directo para botones
-    galleryRef.value.scrollBy({
-      left: scrollAmount,
-      behavior: 'auto' // Cambio a auto para scroll inmediato
-    })
-
-    // Actualizar índice si es mobile
-    if (isMobile) {
-      const newIndex = Math.min(currentImageIndex.value + 1, motoImages.value.length - 1)
-      currentImageIndex.value = newIndex
-    }
-  }
-}
-
-const prevImage = () => {
-  if (galleryRef.value) {
-    const isMobile = window.innerWidth <= 768
-    const scrollAmount = isMobile ? galleryRef.value.clientWidth * 0.85 : 420
-
-    // Scroll más rápido y directo para botones
-    galleryRef.value.scrollBy({
-      left: -scrollAmount,
-      behavior: 'auto' // Cambio a auto para scroll inmediato
-    })
-
-    // Actualizar índice si es mobile
-    if (isMobile) {
-      const newIndex = Math.max(currentImageIndex.value - 1, 0)
-      currentImageIndex.value = newIndex
-    }
-  }
-}
-
-// Utilidades de métrica y animación para snap
-const getGalleryMetrics = () => {
-  const el = galleryRef.value
-  if (!el) return { item: 0, gap: 0, pad: 0 }
-  const firstItem = el.querySelector('.gallery-image-item') as HTMLElement | null
-  const styles = window.getComputedStyle(el)
-  const gap = parseFloat(styles.columnGap || styles.gap || '0') || 0
-  const pad = parseFloat(styles.paddingLeft || '0') || 0
-  const item = firstItem ? firstItem.clientWidth : 0
-  return { item, gap, pad }
-}
-
-const animateScrollTo = (targetLeft: number, duration = 450) => {
-  const el = galleryRef.value
-  if (!el) return
-  const start = el.scrollLeft
-  const dist = targetLeft - start
-  const startTime = performance.now()
-  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
-  const step = (now: number) => {
-    const p = Math.min(1, (now - startTime) / duration)
-    el.scrollLeft = start + dist * easeOutCubic(p)
-    if (p < 1) requestAnimationFrame(step)
-  }
-  requestAnimationFrame(step)
-}
-
-// Funciones para gestos táctiles con arrastre y snap
-const handleTouchStart = (e: TouchEvent) => {
-  if (!galleryRef.value) return
-  const touch = e.touches[0]
-  touchStartX.value = touch.clientX
-  touchStartY.value = touch.clientY
-  lastTouchX.value = touch.clientX
-  lastTouchTime.value = performance.now()
-  isDragging.value = true
-  startScrollLeft.value = galleryRef.value.scrollLeft
-  // Desactivar snap y smooth durante el drag para seguir el dedo
-  galleryRef.value.style.scrollSnapType = 'none'
-  galleryRef.value.style.scrollBehavior = 'auto'
-}
-
-const handleTouchMove = (e: TouchEvent) => {
-  if (!isDragging.value || !galleryRef.value) return
-  const touch = e.touches[0]
-  const dx = touch.clientX - touchStartX.value
-  const dy = Math.abs(touch.clientY - touchStartY.value)
-  // Si el gesto es predominantemente horizontal, prevenimos el scroll vertical
-  if (Math.abs(dx) > dy) {
-    e.preventDefault()
-    galleryRef.value.scrollLeft = startScrollLeft.value - dx
-  }
-  // Calcular velocidad aproximada
-  const now = performance.now()
-  const dt = now - lastTouchTime.value
-  if (dt > 0) velocityX.value = (touch.clientX - lastTouchX.value) / dt
-  lastTouchX.value = touch.clientX
-  lastTouchTime.value = now
-}
-
-const handleTouchEnd = () => {
-  if (!galleryRef.value) return
-  isDragging.value = false
-  // Rehabilitar snap visual tras calcular destino
-  const el = galleryRef.value
-  const { item, gap, pad } = getGalleryMetrics()
-  const unit = item + gap
-  // Ajustar posición relativa descontando padding
-  const raw = Math.max(0, el.scrollLeft - pad)
-  let targetIndex = unit > 0 ? Math.round(raw / unit) : currentImageIndex.value
-  targetIndex = Math.max(0, Math.min(targetIndex, (motoImages.value?.length || 1) - 1))
-  const targetLeft = pad + targetIndex * unit
-  // Animar al destino y luego restaurar propiedades
-  animateScrollTo(targetLeft, 450)
-  // Actualizamos índice
-  currentImageIndex.value = targetIndex
-  // Restaurar snap (dejar que CSS tome control después de la animación)
-  setTimeout(() => {
-    if (galleryRef.value) {
-      galleryRef.value.style.scrollSnapType = ''
-      galleryRef.value.style.scrollBehavior = ''
-    }
-  }, 460)
-}
-
-const goToImage = (index: number) => {
-  currentImageIndex.value = index
-
-  // Scroll directo pero suave a la imagen específica
-  if (galleryRef.value) {
-    const isMobile = window.innerWidth <= 768
-    if (isMobile) {
-      // En mobile, calcular posición exacta
-      const imageWidth = galleryRef.value.clientWidth * 0.85
-      const gap = 24 // Gap entre imágenes
-      const scrollPosition = index * (imageWidth + gap)
-
-      galleryRef.value.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth' // Scroll suave para clicks directos
-      })
-    } else {
-      // En desktop
-      const imageWidth = 400
-      const gap = 32 // Gap entre imágenes en desktop
-      const scrollPosition = index * (imageWidth + gap)
-
-      galleryRef.value.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth' // Scroll suave para clicks directos
-      })
-    }
-  }
-}
-
-// Datos de los productos
-const products = ref([
-  {
-    name: 'Pulsera Deportiva',
-    image: '/images/ns200_slide1.jpg',
-    description: 'Pulsera deportiva de alta calidad'
-  },
-  {
-    name: 'Pulsera Premium',
-    image: '/images/ns200_slide2.jpg',
-    description: 'Edición premium con materiales especiales'
-  },
-  {
-    name: 'Pulsera Clásica',
-    image: '/images/ns200_slide3.jpg',
-    description: 'Diseño clásico y elegante'
-  }
-])
-
-const currentProductIndex = ref(0)
-const currentProduct = ref(products.value[0])
-
-// Funciones de navegación
-const nextProduct = () => {
-  currentProductIndex.value = (currentProductIndex.value + 1) % products.value.length
-  currentProduct.value = products.value[currentProductIndex.value]
-}
-
-// const prevProduct = () => {
-//   currentProductIndex.value = currentProductIndex.value === 0
-//     ? products.value.length - 1
-//     : currentProductIndex.value - 1
-//   currentProduct.value = products.value[currentProductIndex.value]
-// }
-
-// const goToProduct = (index: number) => {
-//   currentProductIndex.value = index
-//   currentProduct.value = products.value[index]
-// }
-
-// Funciones de acción
-const selectNumbers = () => {
-  // Hacer scroll suave a la sección de selección de números
-  const element = document.getElementById('number-selection')
-  if (element) {
-    element.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    })
-  }
-}
-
-const viewRules = () => {
-  // Emitir evento para abrir modal de reglas
-  emit('showRules')
-}
-
-// Navegación con teclado
-const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'ArrowLeft') {
-    prevImage()
-  } else if (event.key === 'ArrowRight') {
-    nextImage()
-  }
-}
-
-onMounted(() => {
-  // Auto-rotación cada 5 segundos
-  setInterval(() => {
-    nextProduct()
-  }, 5000)
-
-  // Agregar listener para teclado
-  window.addEventListener('keydown', handleKeydown)
-})
-
-// Limpiar el listener cuando se desmonte el componente
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
-})
 </script>
 
 <style scoped>
-.hero-rifa {
-  position: relative;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
 
-/* Galería de fotos de la moto - Carousel */
-.moto-gallery-section {
-  position: relative;
-  width: 100%;
-  padding: 5rem 2rem;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #020617 100%);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
-.gallery-container {
-  position: relative;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  text-align: center;
-  overflow-x: visible;
-}
+.hero {
+        position: relative;
+        min-height: 92vh;
+        display: flex;
+        align-items: stretch;
+        background: linear-gradient(120deg,#0A0E1A 0%,#111F3C 55%,#162B52 100%);
+        padding-top: 90px; /* espacio bajo header */
+        overflow: hidden;
+        isolation: isolate;
+    }
+    .hero:before, .hero:after {
+        content:""; position:absolute; inset:0; pointer-events:none;
+    }
+    .hero:before { background:
+        radial-gradient(circle at 18% 30%,rgba(0,210,255,.18),transparent 60%),
+        radial-gradient(circle at 85% 70%,rgba(139,92,246,.15),transparent 65%);
+        mix-blend-mode:screen; }
+    .hero:after { background:linear-gradient(180deg,rgba(10,14,26,0) 0%,rgba(10,14,26,.85) 110%); }
+    /* Mantener la sección hero estática (sin parallax) */
+    .hero { transform: none !important; will-change: auto; }
+    .hero-layout { width:100%; max-width:1500px; margin:0 auto; display:grid; grid-template-columns: minmax(320px,1fr) minmax(380px,520px); gap:3.5rem; padding:2.5rem clamp(1.5rem,4vw,4rem) 4rem; position:relative; z-index:2; }
+    .hero-copy { display:flex; flex-direction:column; justify-content:center; }
+    .eyebrow { font-size:.8rem; letter-spacing:2px; font-weight:600; text-transform:uppercase; color:var(--accent-cyan); background:rgba(255,255,255,.06); padding:.5rem .9rem; border:1px solid rgba(255,255,255,.15); width:fit-content; border-radius:40px; backdrop-filter:blur(8px); margin-bottom:1.4rem; }
+    .hero-copy h1 { font-size:clamp(2.4rem,4.6vw,3.6rem); line-height:1.08; font-weight:800; letter-spacing:-.5px; background:linear-gradient(90deg,#ffffff 0%,#dff8ff 60%,#a4dfff 100%); -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom:1.4rem; }
+    .hero-copy h1 .accent { background:var(--gradient-secondary); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .hero-lead { font-size:1.15rem; max-width:60ch; color:rgba(255,255,255,.82); margin-bottom:2.1rem; line-height:1.6; }
+    .hero-actions { display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:2.2rem; }
+  .cta-large, .btn-ghost { background:rgba(255,255,255,.085); border:1px solid rgba(255,255,255,.22); color:#e9f5ff; font-size:.95rem; font-weight:600; padding:.85rem 1.65rem; border-radius:42px; cursor:pointer; display:inline-block; letter-spacing:.5px; position:relative; text-decoration:none; box-shadow:0 2px 10px -4px rgba(255,255,255,.18),0 0 0 1px rgba(255,255,255,.05); backdrop-filter:blur(6px); transition:background .35s ease, box-shadow .4s ease, color .3s ease, transform .35s ease; }
+  .cta-large:before, .btn-ghost:before { content:""; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(140deg,rgba(255,255,255,.55),rgba(255,255,255,0) 65%); opacity:.18; pointer-events:none; mix-blend-mode:overlay; }
+  .cta-large:hover, .btn-ghost:hover { background:rgba(255,255,255,.15); color:#ffffff; box-shadow:0 6px 20px -8px rgba(255,255,255,.35); transform:translateY(-3px); }
+  .cta-large:active, .btn-ghost:active { transform:translateY(-1px); box-shadow:0 3px 10px -4px rgba(255,255,255,.25); }
+  .cta-large:focus-visible, .btn-ghost:focus-visible { outline:2px solid rgba(140,210,255,.85); outline-offset:2px; }
+    .badges { display:flex; flex-wrap:wrap; gap:.7rem; }
+    .badge { font-size:.7rem; letter-spacing:1px; font-weight:600; text-transform:uppercase; padding:.45rem .75rem; background:rgba(255,255,255,.08); color:var(--accent-cyan); border:1px solid rgba(255,255,255,.15); border-radius:6px; backdrop-filter:blur(6px); }
+    .hero-panel { position:relative; display:flex; align-items:center; justify-content:center; }
+    .metrics-card { position:relative; width:100%; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); border-radius:28px; padding:2.2rem 2rem 2.6rem; backdrop-filter:blur(14px); box-shadow:0 10px 40px -10px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.05); overflow:hidden; }
+    .metrics-card:before { content:""; position:absolute; inset:0; background: radial-gradient(circle at 25% 20%,rgba(255,255,255,.35),rgba(255,255,255,0) 60%), linear-gradient(140deg,rgba(0,210,255,.25),rgba(139,92,246,.25)); mix-blend-mode:overlay; opacity:.55; }
+    .metrics-grid { display:grid; grid-template-columns:repeat(2,minmax(120px,1fr)); gap:1.4rem 1.2rem; margin-bottom:1.8rem; }
+    .metric { padding:.85rem .9rem 1rem; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); border-radius:16px; position:relative; overflow:hidden; }
+    .metric h4 { font-size:.72rem; font-weight:600; letter-spacing:1px; color:rgba(255,255,255,.65); text-transform:uppercase; margin-bottom:.45rem; }
+    .metric .value { font-size:1.45rem; font-weight:700; background:linear-gradient(90deg,#fff,#b8f4ff); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:.5px; }
+    .metric small { display:block; font-size:.65rem; color:rgba(255,255,255,.55); margin-top:.2rem; }
+    .panel-title { font-size:.85rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,.75); margin-bottom:1rem; }
+  /* Barras actividad nuevas */
+  .activity-bars { display:flex; align-items:flex-end; gap:12px; height:60px; margin-top:.35rem; }
+  .activity-bar { --min:.3; --max:.9; flex:1; height:100%; background:linear-gradient(180deg,#7adfff 0%,#55caff 55%,#7bb5ff 100%); border-radius:8px 8px 4px 4px; position:relative; overflow:hidden; animation:pulseBar 3.8s ease-in-out infinite; animation-delay:var(--delay); transform-origin:bottom; box-shadow:0 6px 18px -8px rgba(0,210,255,.4),0 0 0 1px rgba(255,255,255,.07); }
+  .activity-bar:after { content:""; position:absolute; inset:0; background:linear-gradient(140deg,rgba(255,255,255,.55),rgba(255,255,255,0) 65%); mix-blend-mode:overlay; opacity:.35; }
+  @keyframes pulseBar { 0% { transform:scaleY(var(--min)); filter:brightness(.95);} 45% { transform:scaleY(var(--max)); filter:brightness(1.07);} 55% { transform:scaleY(calc(var(--max) - .12)); } 100% { transform:scaleY(var(--min)); filter:brightness(.92);} }
+    .note { font-size:.7rem; color:rgba(255,255,255,.55); letter-spacing:.5px; }
+    @media (max-width: 960px){
+        .hero-layout { grid-template-columns: 1fr; padding:2.5rem 2rem 4rem; }
+        .hero-panel { order:-1; }
+        .metrics-card { margin:0 auto 1.5rem; max-width:600px; }
+        .hero { min-height: auto; }
+        .hero-actions { justify-content:flex-start; }
+    }
+    @media (max-width: 560px){
+        .hero-copy h1 { font-size:clamp(2.1rem,9.5vw,2.7rem); }
+        .hero-lead { font-size:1.02rem; }
+        .metrics-grid { grid-template-columns:repeat(2,minmax(110px,1fr)); }
+        .hero-actions { flex-direction:column; }
+        .cta-large, .btn-ghost { width:100%; justify-content:center; }
+    }
+/* --- LAYOUT BASE --- */
+.hero { position: relative; padding: 118px 0 88px; overflow: hidden; background: var(--primary-dark); color: #dfe7ef; }
+.hero__inner { max-width: 1320px; margin: 0 auto; padding: 0 clamp(1.25rem,5vw,4.75rem); display: grid; grid-template-columns: 1fr 0.95fr; gap: 60px; }
+.hero__content { position: relative; z-index: 2; }
 
-.gallery-header {
-  text-align: center;
-  margin-bottom: 3rem;
-  padding: 0 2rem;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-}
+/* --- BADGE --- */
+.hero__badge { display: inline-block; letter-spacing: .13em; font-size: 11px; font-weight: 600; padding: 8px 20px 9px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14); backdrop-filter: blur(8px); text-transform: uppercase; margin-bottom: 30px; color: #c9d6e4; position:relative; overflow:hidden; }
+.hero__badge:after { content:""; position:absolute; inset:0; background: linear-gradient(90deg, rgba(255,255,255,0.32), rgba(255,255,255,0) 45%); mix-blend-mode:overlay; opacity:.25; }
 
-.gallery-header h1 {
-  font-size: 3.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0;
-  line-height: 1.1;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
+/* --- TITULO --- */
+.hero__title { font-size: clamp(2.95rem, 4.9vw, 4.7rem); line-height: 1.055; font-weight: 820; letter-spacing: -.65px; margin: 0 0 34px; color:#eef4f9; }
+.title-line { display:inline-block; }
+.gradient-text { background: linear-gradient(95deg,#00caff 0%, #12d4ff 18%, #39c3ff 42%, #5aaefc 62%, #7e9bff 82%, #9a7bff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 10px rgba(0,210,255,.28)); }
 
-.gallery-header .highlight-blue {
-  color: #60a5fa;
-  text-shadow: 0 0 30px rgba(96, 165, 250, 0.4);
-}
+/* --- SUBTITULO --- */
+.hero__subtitle { font-size: 1.02rem; max-width: 640px; line-height: 1.58; color: #c3cfd8; margin-bottom: 40px; font-weight:500; }
 
-/* Contenedor para centrar el contenido debajo de la galería */
-.content-wrapper {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  text-align: center;
-}
+/* --- ACCIONES --- */
+.hero__actions { display: flex; align-items: center; gap: 22px; margin-bottom: 36px; flex-wrap: wrap; }
+.cta { position: relative; font-weight: 600; font-size: .95rem; letter-spacing: .4px; cursor: pointer; }
+.cta--primary { background: linear-gradient(110deg,#02e2ff 0%, #14c8ff 30%, #3f96ff 60%, #6a55ff 100%); border: none; color: #fff; padding: 18px 40px; border-radius: 48px; font-weight:600; position:relative; overflow:hidden; box-shadow: 0 6px 24px -6px rgba(2,198,255,.55), 0 8px 30px -12px rgba(106,85,255,.45); transition: transform .25s ease, box-shadow .35s ease, filter .35s ease; }
+.cta--primary:before { content:''; position:absolute; inset:0; background: radial-gradient(circle at 32% 38%, rgba(255,255,255,0.6), rgba(255,255,255,0) 68%); opacity:.5; mix-blend-mode:overlay; }
+.cta--primary:hover { transform: translateY(-3px); filter: brightness(1.07); }
+.cta--primary:active { transform: translateY(-1px); }
+.cta--primary:focus-visible { outline:2px solid #63caff; outline-offset:3px; }
+.cta--ghost { background: rgba(255,255,255,0.04); border:1px solid rgba(80,165,255,0.35); padding: 17px 38px; border-radius: 46px; color:#d3e4f2; backdrop-filter: blur(5px); transition:.35s; font-weight:600; position:relative; }
+.cta--ghost:before { content:""; position:absolute; inset:0; background: linear-gradient(150deg, rgba(120,200,255,0.28), rgba(120,200,255,0) 60%); opacity:.22; }
+.cta--ghost:hover { background: rgba(90,170,255,0.10); color:#ffffff; border-color:rgba(120,200,255,0.55); box-shadow:0 4px 18px -6px rgba(80,165,255,.45); }
+.cta--ghost:focus-visible { outline:2px solid #4ab8ff; outline-offset:3px; }
 
-/* Galería horizontal */
-.horizontal-gallery {
-  display: flex;
-  width: 100vw;
-  margin: 0 0 2rem 0;
-  margin-left: calc(-50vw + 50%);
-  flex-wrap: nowrap;
-  gap: 2rem;
-  padding: 2rem;
-  background: rgba(15, 23, 42, 0.6);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-behavior: smooth; /* Volvemos a smooth para que funcionen los swipes suaves */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-  border-radius: 0;
-  touch-action: pan-x; /* Mejorar gesto horizontal */
-  overscroll-behavior-x: contain; /* Evitar rebote de la página */
-}
+/* --- TAGS --- */
+.hero__tags { list-style:none; display:flex; flex-wrap:wrap; gap:12px; padding:0; margin:0; }
+.tag { font-size:.63rem; letter-spacing:.14em; text-transform:uppercase; padding:6px 13px 7px; border-radius:8px; background:linear-gradient(145deg, rgba(0,225,255,0.08) 0%, rgba(110,90,255,0.08) 100%); color:#a8c4d6; border:1px solid rgba(70,170,255,0.38); font-weight:600; position:relative; overflow:hidden; backdrop-filter: blur(4px); transition:.35s; }
+.tag:after { content:""; position:absolute; inset:0; background: linear-gradient(130deg, rgba(255,255,255,0.35), rgba(255,255,255,0) 65%); opacity:.12; }
+.tag:hover { color:#ffffff; border-color:rgba(110,180,255,0.75); background:linear-gradient(145deg, rgba(0,225,255,0.18) 0%, rgba(110,90,255,0.18) 100%); box-shadow:0 4px 14px -6px rgba(0,210,255,.4); }
 
-/* Ocultar scrollbar en WebKit */
-.horizontal-gallery::-webkit-scrollbar {
-  display: none;
-}
+/* --- PANEL MÉTRICAS --- */
+.metrics { position: relative; z-index: 2; background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 65%); border:1px solid rgba(255,255,255,0.10); border-radius:34px; padding:42px 46px 40px; backdrop-filter: blur(20px); display:flex; flex-direction:column; gap:30px; box-shadow:0 16px 60px -28px rgba(0,0,0,.65), 0 4px 26px -14px rgba(0,0,0,.55); }
+.metrics:before { content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; background: linear-gradient(140deg, rgba(120,180,255,0.35), rgba(0,200,255,0) 60%, rgba(150,110,255,0.35)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity:.35; pointer-events:none; }
+.metrics__header { font-size:.74rem; letter-spacing:.14em; font-weight:600; color:#d0dbe7; }
+.metrics__grid { display:grid; grid-template-columns:repeat(2,1fr); gap:22px 28px; }
+.metric-card { position:relative; padding:20px 18px 18px; border:1px solid rgba(255,255,255,0.12); border-radius:20px; background:linear-gradient(170deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.018) 90%); min-height:110px; display:flex; flex-direction:column; justify-content:space-between; transition: border-color .4s ease, background .4s ease, transform .4s ease; overflow:hidden; }
+.metric-card:after { content:""; position:absolute; inset:0; background: radial-gradient(circle at 75% 25%, rgba(255,255,255,0.3), transparent 70%); opacity:0; transition:.6s; }
+.metric-card:hover { border-color: rgba(255,255,255,0.28); background:linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 90%); transform:translateY(-4px); }
+.metric-card:hover:after { opacity:.55; }
+.metric-card__label { font-size:.64rem; letter-spacing:.14em; font-weight:600; color:#a8b7c5; }
+.metric-card__value { font-size:1.7rem; font-weight:700; display:flex; align-items:flex-end; gap:2px; color:#fff; }
+.metric-card__value span:first-child { font-size:1.05rem; font-weight:600; }
+.metric-card__hint { font-size:.6rem; letter-spacing:.1em; color:#8899aa; font-weight:500; }
 
-.gallery-image-item {
-  flex: 0 0 400px; /* Ancho fijo para cada imagen */
-  position: relative;
-  cursor: pointer;
-  transition: all 0.15s ease-out; /* Transición más rápida */
-  border-radius: 16px;
-  overflow: hidden;
-  border: 2px solid rgba(96, 165, 250, 0.3);
-  background: #1e293b;
-}
+/* --- ACTIVIDAD --- */
+.activity { display:flex; flex-direction:column; gap:14px; }
+.activity__bars { display:flex; align-items:flex-end; gap:10px; height:54px; }
+.bar { flex:1; max-width:62px; height: var(--h); background: linear-gradient(180deg,#7adfff 0%, #52d2ff 45%, #73b4ff 90%); border-radius:6px; position:relative; overflow:hidden; animation: rise 3.4s ease-in-out infinite; animation-delay:var(--d); box-shadow:0 4px 16px -6px rgba(0,216,255,.35),0 0 0 1px rgba(255,255,255,0.10); }
+.bar:after { content:''; position:absolute; inset:0; background: linear-gradient(140deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%); mix-blend-mode:overlay; opacity:.45; }
+@keyframes rise { 0%,100% { transform: translateY(8%); opacity:.85;} 50% { transform: translateY(-8%); opacity:1;} }
+.activity__caption { font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; color:#7d93a5; }
 
-.gallery-image-item:hover {
-  transform: translateY(-8px);
-  z-index: 10;
-  border-color: rgba(96, 165, 250, 0.8);
-  box-shadow: 0 12px 35px rgba(96, 165, 250, 0.3);
-}
+/* --- PARTICULAS Y DECORACION --- */
+.hero:before { content:""; position:absolute; inset:0; background: radial-gradient(circle at 65% 25%, rgba(90,120,255,0.12), transparent 60%), radial-gradient(circle at 15% 75%, rgba(0,210,255,0.10), transparent 65%); pointer-events:none; }
+.hero:after { content:""; position:absolute; inset:0; background: repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 140px), repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 140px); mask: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.55) 15%, rgba(0,0,0,.85) 55%, transparent 100%); opacity:.32; mix-blend-mode:overlay; pointer-events:none; }
+.hero__bg-particles { position:absolute; inset:0; pointer-events:none; overflow:hidden; filter: blur(1px); }
+.particle { position:absolute; background: radial-gradient(circle at 30% 30%, #3fdfff 0%, #0b5f75 70%, transparent 100%); border-radius:50%; opacity:.22; animation: float 7.2s linear infinite; }
+@keyframes float { 0% { transform: translate3d(0,0,0) scale(.9); opacity:.12;} 50% { opacity:.45; } 100% { transform: translate3d(0,-50px,0) scale(1); opacity:.08;} }
 
-.gallery-image-item.active {
-  border-color: #60a5fa;
-  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
-}
+/* --- ANIMACION REVEAL --- */
+.reveal { opacity:0; transform: translateY(26px); animation: fadeUp .85s cubic-bezier(.16,.8,.24,1) forwards; animation-delay: calc(var(--i) * 120ms); }
+@keyframes fadeUp { to { opacity:1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .reveal { animation:none; opacity:1; transform:none;} }
 
-.image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  overflow: hidden;
-}
-
-.image-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.gallery-image-item:hover .image-wrapper img {
-  transform: scale(1.1);
-}
-
-.image-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(30, 41, 59, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(2px);
-}
-
-.gallery-image-item:hover .image-overlay {
-  opacity: 1;
-}
-
-.gallery-image-item.active .image-overlay {
-  opacity: 0;
-}
-
-.image-info {
-  text-align: center;
-  color: #ffffff;
-  padding: 1rem;
-}
-
-.image-info h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  color: #60a5fa;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.image-info p {
-  font-size: 0.9rem;
-  margin: 0;
-  color: #e2e8f0;
-  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
-}
-
-/* Navegación con flechas a los lados */
-.gallery-navigation {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 100%;
-  height: 0;
-  z-index: 20;
-  pointer-events: none;
-}
-
-.gallery-nav-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border: 2px solid rgba(96, 165, 250, 0.4);
-  border-radius: 50%;
-  color: #60a5fa;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(15px);
-  pointer-events: all;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.gallery-prev {
-  left: 2rem;
-}
-
-.gallery-next {
-  right: 2rem;
-}
-
-.gallery-nav-arrow:hover {
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.3) 0%, rgba(30, 41, 59, 0.3) 100%);
-  border-color: #60a5fa;
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 0 25px rgba(96, 165, 250, 0.5);
-  color: #ffffff;
-}
-
-.gallery-nav-arrow svg {
-  width: 24px;
-  height: 24px;
-}
-
-/* Botón agregar fotos */
-.add-photos-section {
-  text-align: center;
-}
-
-.add-photo-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
-}
-
-.add-photo-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(6, 182, 212, 0.4);
-}
-
-.add-photo-btn svg {
-  width: 20px;
-  height: 20px;
-}
+/* --- RESPONSIVE --- */
+@media (max-width: 1100px) { .hero__inner { grid-template-columns: 1fr; padding:0 clamp(1rem,4.6vw,2.4rem); } .metrics { order: 2; margin-top: 42px; } .hero__content { order: 1; } }
+@media (max-width: 640px) { .hero { padding: 116px 0 72px; } .hero__title { font-size: clamp(2.3rem, 9.2vw, 3.2rem); } .hero__actions { gap:16px; } .cta--primary { padding:15px 30px; } .cta--ghost { padding:14px 28px; } .metrics { padding:34px 30px 30px; border-radius:28px; } .metrics__grid { grid-template-columns: 1fr 1fr; gap:16px 18px; } .metric-card { min-height:96px; } .hero__badge { margin-bottom:20px; } .activity__bars { height:44px; } }
+</style>
+<!-- CSS legado eliminado -->
 
 /* Responsive para la galería horizontal */
 @media (max-width: 1024px) {
@@ -1262,147 +802,4 @@ onUnmounted(() => {
   50% { transform: translateY(-20px) rotate(180deg); }
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .hero-container {
-    grid-template-columns: 1fr;
-    gap: 3rem;
-    text-align: center;
-  }
-
-  .main-title h1 {
-    font-size: 2.5rem;
-  }
-
-  .stats-section {
-  /* Mantener 2 columnas para que las tarjetas queden centradas */
-  grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .hero-container {
-    padding: 1rem;
-    gap: 2rem;
-  }
-
-  .main-title h1 {
-    font-size: 2rem;
-  }
-
-  .action-buttons {
-    justify-content: center;
-  }
-
-  .btn-primary,
-  .btn-secondary {
-    padding: 0.8rem 1.5rem;
-    font-size: 0.9rem;
-  }
-
-  .demo-controls {
-    gap: 0.5rem;
-    margin-top: 0.8rem;
-  }
-
-  .btn-demo {
-    padding: 0.5rem 0.8rem;
-    font-size: 0.8rem;
-  }
-
-  .stats-section {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .nav-btn {
-    width: 40px;
-    height: 40px;
-  }
-}
-
-@media (max-width: 480px) {
-  .main-title h1 {
-    font-size: 1.8rem;
-  }
-
-  .description p {
-    font-size: 1rem;
-  }
-
-  .product-showcase {
-    padding: 1rem;
-  }
-
-  .product-image-container {
-    min-height: 200px;
-  }
-
-  .gallery-navigation{
-    top: 30%;
-  }
-}
-
-/* Estilos responsivos para la sección de contenido */
-@media (max-width: 1024px) {
-  .content-section .main-title h1 {
-    font-size: 3.5rem;
-  }
-
-  .content-section .action-buttons {
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .content-section {
-    padding: 3rem 0;
-    margin: 1rem;
-    border-radius: 16px;
-  }
-
-  .content-container {
-    padding: 0 1rem;
-  }
-
-  .content-section .main-title h1 {
-    font-size: 2.5rem;
-  }
-
-  .content-section .description p {
-    font-size: 1.1rem;
-  }
-
-  .content-section .action-buttons {
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .content-section .stats-section {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .content-section {
-    padding: 2rem 0;
-    margin: 0.5rem;
-  }
-
-  .content-section .main-title h1 {
-    font-size: 2rem;
-  }
-
-  .content-section .description p {
-    font-size: 1rem;
-  }
-
-  .content-section .verification-badge {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-}
-</style>
+/* estilos antiguos eliminados */

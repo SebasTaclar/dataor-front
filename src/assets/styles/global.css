@@ -64,6 +64,15 @@
   --app-warning: #ff9800;
   --app-error: #f44336;
   --app-info: #2196f3;
+
+  /* Nuevas variables para header y efectos */
+  --accent-cyan: #00e4ff;
+  --gradient-secondary: linear-gradient(135deg,#00e4ff,#7f7bff);
+  --gradient-tertiary: linear-gradient(135deg,#04c4d8,#6c8dff);
+  --primary-dark: linear-gradient(120deg, #0A0E1A 0%, #111F3C 55%, #162B52 100%);
+  --gray-light: #1f2732;
+  --glass-border: rgba(255,255,255,0.12);
+  --backdrop-blur: blur(10px);
 }
 
 /* Modo Oscuro */
@@ -327,3 +336,88 @@ body {
     padding: 1rem;
   }
 }
+
+/* ================= Scrollbar personalizada ================= */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--gray-light); }
+::-webkit-scrollbar-thumb { background: var(--gradient-secondary); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gradient-tertiary); }
+
+/* ================= Header global (nueva estructura) ================= */
+.header {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  background: rgba(10,14,26,0.85);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border-bottom: 1px solid var(--glass-border);
+  z-index: 1000;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  padding: 1rem 0;
+}
+.header.scrolled {
+  background: rgba(10,14,26,0.95);
+  box-shadow: 0 8px 24px -10px rgba(0,0,0,.65), 0 2px 8px -4px rgba(0,0,0,.5);
+  border-bottom: 1px solid var(--accent-cyan);
+}
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* =====================================================
+   Logo Styles (header / footer / variantes)
+   ===================================================== */
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--white);
+}
+
+/* Versión principal con bordes curvos para el header */
+.logo-image-rounded {
+  height: 70px;
+  width: auto;
+  max-width: 260px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 2px solid rgba(255,255,255,0.12);
+  padding: 6px;
+  background: rgba(255,255,255,0.02);
+  box-shadow: 0 6px 18px -8px rgba(0,0,0,0.6), 0 6px 20px -12px rgba(0,210,255,0.08);
+  transition: transform .25s ease, box-shadow .3s ease, filter .25s ease;
+  display: block;
+}
+.logo-image-rounded:hover {
+  transform: translateY(-2px) scale(1.01);
+  filter: brightness(1.03);
+}
+
+@media (max-width: 600px) {
+  .logo-image-rounded { height: 58px; max-width: 200px; border-radius: 12px; padding:5px; }
+}
+
+/* Variante compacta para footer u otras zonas */
+.logo-compact-rounded {
+  height: 55px;
+  width: auto;
+  max-width: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 5px;
+  background: rgba(255,255,255,0.01);
+  box-shadow: 0 3px 10px -6px rgba(0,0,0,0.6);
+  transition: transform .2s ease, box-shadow .25s ease;
+  display: inline-block;
+}
+.logo-compact-rounded:hover { transform: translateY(-2px); box-shadow: 0 6px 18px -8px rgba(0,0,0,0.6); }
+
+/* Versión monocromática */
+.logo-monochrome { filter: grayscale(1) brightness(1.6) contrast(1.1); }

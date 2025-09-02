@@ -1,7 +1,7 @@
 <template>
   <div class="floating-social">
     <a
-      href="https://wa.me/+5712345678"
+      href="https://wa.me/+573107695856"
       target="_blank"
       rel="noopener"
       class="social-btn whatsapp"
