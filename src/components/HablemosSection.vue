@@ -21,11 +21,11 @@
             <button class="hbl-cta primary" @click="openSchedule">🚀 Agendar llamada</button>
             <div class="hbl-contact">
               <span class="hbl-contact-text">
-                Contacto: <strong>+57 300 123 4567</strong>
+                Contacto: <strong>+573107695856</strong>
               </span>
               <a
                 class="whatsapp-btn"
-                href="https://wa.me/573001234567?text=Hola%20quiero%20información%20sobre%20sus%20servicios"
+                href="https://wa.me/573107695856?text=Hola%20quiero%20información%20sobre%20sus%20servicios"
                 target="_blank"
                 rel="noopener"
                 aria-label="Escríbenos por WhatsApp"
