@@ -2,10 +2,8 @@
   <div class="admin-dashboard">
     <div class="dashboard-container">
       <!-- Header -->
-      <!-- Header -->
       <div class="dashboard-header">
         <h1>Panel de Administración</h1>
-
       </div>
 
       <!-- Error Message -->
@@ -14,118 +12,158 @@
         <button @click="error = null" class="close-error">×</button>
       </div>
 
-
-
       <!-- Dashboard Content -->
       <div v-else class="dashboard-content">
-        <!-- Company Static Stats (Hardcoded) -->
+        <!-- Formulario para Nuevo Proyecto -->
+        <div class="new-project-section">
+          <div class="section-head">
+            <h3>➕ Agregar Nuevo Proyecto</h3>
+          </div>
+          <form @submit.prevent="addNewProject" class="new-project-form">
+            <div class="form-row">
+              <input
+                v-model="newProject.name"
+                type="text"
+                placeholder="Nombre del proyecto"
+                required
+                class="form-input"
+              />
+              <input
+                v-model="newProject.focus"
+                type="text"
+                placeholder="Enfoque (ej: Frontend, Backend, IA)"
+                required
+                class="form-input"
+              />
+              <select v-model="newProject.status" class="form-select" required>
+                <option value="">Seleccionar estado</option>
+                <option v-for="opt in STATUS_OPTIONS" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+              <button type="submit" class="add-btn">Agregar</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Company Dynamic Stats -->
         <div class="company-stats-section">
           <div class="section-head">
-            <h2>📈 Visión General Empresa (Estático)</h2>
-            <p>Datos de ejemplo para proyectos y equipo (placeholder)</p>
+            <h2>📈 Visión General de Proyectos</h2>
+            <p>Estadísticas en tiempo real basadas en los proyectos actuales</p>
           </div>
           <div class="company-stats-grid">
             <div class="cstat-card total-projects">
               <div class="cstat-icon">🗂️</div>
               <div class="cstat-content">
                 <h4>Proyectos Totales</h4>
-                <p class="cstat-number">{{ companyStats.totalProjects }}</p>
-                <small>{{ companyStats.completedProjects }} completados</small>
+                <p class="cstat-number">{{ projectStats.total }}</p>
+                <small>{{ projectStats.completed }} completados</small>
               </div>
             </div>
-            <div class="cstat-card employees">
-              <div class="cstat-icon">👥</div>
+            <div class="cstat-card demo">
+              <div class="cstat-icon">🎯</div>
               <div class="cstat-content">
-                <h4>Empleados</h4>
-                <p class="cstat-number">{{ companyStats.employees }}</p>
-                <small>{{ companyStats.hiringOpenings }} vacantes abiertas</small>
+                <h4>En Demo</h4>
+                <p class="cstat-number">{{ projectStats.demo }}</p>
+                <small>Listos para mostrar</small>
               </div>
             </div>
             <div class="cstat-card in-progress">
               <div class="cstat-icon">⚙️</div>
               <div class="cstat-content">
-                <h4>En Progreso</h4>
-                <p class="cstat-number">{{ companyStats.inProgress }}</p>
-                <small>{{ companyStats.thisQuarterDeliveries }} entregas este trimestre</small>
+                <h4>En Ejecución</h4>
+                <p class="cstat-number">{{ projectStats.inProgress }}</p>
+                <small>Actualmente desarrollando</small>
               </div>
             </div>
             <div class="cstat-card future">
               <div class="cstat-icon">🚀</div>
               <div class="cstat-content">
-                <h4>Proyectos Futuros</h4>
-                <p class="cstat-number">{{ companyStats.future }}</p>
-                <small>{{ companyStats.discoveryStage }} en discovery</small>
+                <h4>Futuros</h4>
+                <p class="cstat-number">{{ projectStats.future }}</p>
+                <small>{{ projectStats.projection }} proyecciones</small>
               </div>
             </div>
           </div>
 
           <div class="projects-panels">
-            <div class="panel mini-chart">
-              <h4>Tendencia de Proyectos (Mock)</h4>
-              <div class="sparkline">
-                <div v-for="(v,i) in mockTrend" :key="i" class="bar" :style="{ height: v + '%'}"></div>
+            <!-- Lista profesional de proyectos - Espacio ampliado -->
+            <div class="panel projects-professional main-projects">
+              <div class="panel-header">
+                <h4>🚀 Gestión de Proyectos</h4>
+                <div class="project-counter">{{ projectList.length }} proyectos activos</div>
               </div>
-              <ul class="legend">
-                <li><span class="dot completed"></span>Completados</li>
-                <li><span class="dot inprogress"></span>En Progreso</li>
-                <li><span class="dot future"></span>Futuros</li>
-              </ul>
+              <div class="projects-grid">
+                <div v-for="project in projectList" :key="project.id" class="project-card">
+                  <div class="project-main">
+                    <div class="project-info">
+                      <h5 class="project-name">{{ project.name }}</h5>
+                      <p class="project-focus">{{ project.focus }}</p>
+                    </div>
+                    <div class="project-actions">
+                      <select
+                        class="status-dropdown"
+                        v-model="project.status"
+                        :class="`status-${project.status}`"
+                      >
+                        <option v-for="opt in STATUS_OPTIONS" :key="opt.value" :value="opt.value">
+                          {{ opt.label }}
+                        </option>
+                      </select>
+                      <button
+                        @click="removeProject(project.id)"
+                        class="delete-btn"
+                        title="Eliminar proyecto"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                  <div class="project-footer">
+                    <div class="status-indicator" :class="`indicator-${project.status}`">
+                      <span class="status-dot"></span>
+                      {{ getStatusLabel(project.status) }}
+                    </div>
+                    <div class="project-id">#{{ project.id }}</div>
+                  </div>
+                </div>
+
+                <!-- Mensaje cuando no hay proyectos -->
+                <div v-if="projectList.length === 0" class="empty-projects">
+                  <div class="empty-icon">📁</div>
+                  <h5>No hay proyectos aún</h5>
+                  <p>Utiliza el formulario de arriba para agregar tu primer proyecto</p>
+                </div>
+              </div>
             </div>
-            <div class="panel projects-table-panel">
-              <h4>Proyectos (Top 6 Demo)</h4>
-              <table class="projects-table">
-                <thead>
-                  <tr>
-                    <th>Proyecto</th>
-                    <th>Estado</th>
-                    <th>Responsable</th>
-                    <th>ETA</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="p in projectListComputed" :key="p.id">
-                    <td class="p-name">{{ p.name }}</td>
-                    <td><span :class="'p-badge status-' + p.status">{{ p.statusLabel }}</span></td>
-                    <td class="p-owner">{{ p.owner }}</td>
-                    <td class="p-eta">{{ p.eta }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="panel focus-panel">
-              <h4>Enfoque Actual</h4>
-              <ul class="focus-list">
-                <li v-for="f in focusItems" :key="f.label">
-                  <span class="fi-label">{{ f.label }}</span>
-                  <span class="fi-badge" :class="'prio-' + f.prio">{{ f.prio.toUpperCase() }}</span>
-                </li>
-              </ul>
-              <p class="note">Estos datos son demostrativos y no representan métricas reales.</p>
+          </div>
+
+          <!-- Gráfico de distribución por estados - Movido abajo -->
+          <div class="distribution-section">
+
+            <!-- Nueva gráfica de barras horizontal -->
+            <div class="panel hbar-chart">
+              <h4>📊 Barras Horizontales (tope 20)</h4>
+              <div class="hbar-list">
+                <div class="hbar-row" v-for="item in chartData" :key="item.status">
+                  <span class="hbar-label">{{ item.label }}</span>
+                  <div class="hbar-track">
+                    <div class="hbar-fill" :class="`hbar-${item.status}`" :style="{ width: item.percentage + '%' }"></div>
+                  </div>
+                  <span class="hbar-value">{{ item.count }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-
-
-
-
-
-
-
-        </div>
-
-
-
-
       </div>
     </div>
-
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useAdminPurchases } from '@/composables/useAdminPurchases'
-import { useNumbersAvailability } from '@/composables/useNumbersAvailability'
+import { ref, onMounted, watch, computed } from 'vue'
 import { authService } from '@/services/api/authService'
 import { useRouter } from 'vue-router'
 
@@ -136,253 +174,178 @@ if (!authService.isAdmin()) {
   router.push('/')
 }
 
-// Admin purchases composable
-const {
-  isLoading: isLoadingPurchases,
-  error,
-  purchases,
-  purchasesByStatus,
-  stats,
-  getAllPurchases
-} = useAdminPurchases()
+// Estado para manejar errores
+const error = ref<string | null>(null)
 
-// Numbers availability composable
-const {
-  refreshTakenNumbers,
-} = useNumbersAvailability()
+// ================== COMPANY DASHBOARD ==================
+type ProjectStatus = 'demo' | 'inprogress' | 'completed' | 'paused' | 'future' | 'projection'
 
-// Estado local
-const selectedStatus = ref<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'>('ALL')
-const isRefreshingWallpapers = ref(false)
+const STATUS_OPTIONS: Array<{ value: ProjectStatus; label: string }> = [
+  { value: 'demo', label: 'Demo' },
+  { value: 'inprogress', label: 'En ejecución' },
+  { value: 'completed', label: 'Terminado' },
+  { value: 'paused', label: 'En pausa' },
+  { value: 'future', label: 'Backlog' },
+  { value: 'projection', label: 'Proyección' },
+]
 
-// Winner game state
-const isGameStarted = ref(false)
-const currentAttempt = ref(0)
-const attempts = ref<(number | null)[]>([null, null, null, null, null])
-const winnerNumber = ref<number | null>(null)
-const isGameComplete = ref(false)
-const isGameRunning = ref(false)
-const isProcessingAttempt = ref(false)
-const isShowingSpinEffect = ref(false)
-const spinningNumbers = ref<(number | null)[]>([null, null, null, null, null])
+const STORAGE_KEY = 'adminDashboard.projects'
 
-// ================== MOCK COMPANY DASHBOARD (Hardcoded) ==================
-const companyStats = ref({
-  totalProjects: 32,
-  completedProjects: 18,
-  employees: 14,
-  hiringOpenings: 3,
-  inProgress: 9,
-  thisQuarterDeliveries: 5,
-  future: 12,
-  discoveryStage: 4
-})
+interface ProjectRow {
+  id: number
+  name: string
+  status: ProjectStatus
+  focus: string
+}
 
-interface ProjectRow { id:number; name:string; status:'completed'|'inprogress'|'paused'|'future'; owner:string; eta:string }
 const projectList = ref<ProjectRow[]>([
-  { id:1, name:'Plataforma Data Lake', status:'inprogress', owner:'María', eta:'Oct 2025' },
-  { id:2, name:'API Facturación v2', status:'completed', owner:'Carlos', eta:'Ago 2025' },
-  { id:3, name:'Módulo IA Recomendador', status:'inprogress', owner:'Lucía', eta:'Nov 2025' },
-  { id:4, name:'Portal Clientes NextGen', status:'future', owner:'(Asignar)', eta:'Q1 2026' },
-  { id:5, name:'Migración Monolito', status:'paused', owner:'Diego', eta:'En revisión' },
-  { id:6, name:'Pipeline Streaming', status:'completed', owner:'Elena', eta:'Jul 2025' },
+  // Lista vacía para empezar limpio
 ])
-const statusLabels:Record<string,string> = { completed:'Completado', inprogress:'En Progreso', paused:'En Pausa', future:'Futuro' }
-const projectListComputed = computed(()=> projectList.value.map(p=> ({ ...p, statusLabel: statusLabels[p.status] || p.status })))
-// Ajustar template para usar projectListComputed si se necesitara evolución; por simplicidad usamos projectList y transformamos en render
-const focusItems = ref([
-  { label:'Optimizar costos cloud', prio:'alta' },
-  { label:'Reducir tiempo onboarding datos', prio:'media' },
-  { label:'Pipelines CI/CD analítica', prio:'alta' },
-  { label:'Discovery portal clientes', prio:'media' },
-  { label:'Definir KPIs producto IA', prio:'baja' },
-])
-const mockTrend = ref([55,68,60,74,62,80,77,83,70,88,91,86])
 
-// Compras filtradas
-const filteredPurchases = computed(() => {
-  if (selectedStatus.value === 'ALL') {
-    return purchases.value
-  }
-  return purchasesByStatus.value[selectedStatus.value] || []
+// Formulario para nuevo proyecto
+const newProject = ref({
+  name: '',
+  focus: '',
+  status: '' as ProjectStatus | ''
 })
 
-// Números elegibles para el sorteo (solo aprobados)
-const eligibleNumbers = computed(() => {
-  const approvedPurchases = purchasesByStatus.value.APPROVED || []
-  const numbers: number[] = []
+// Estadísticas dinámicas basadas en projectList
+const projectStats = computed(() => {
+  const stats = {
+    total: projectList.value.length,
+    completed: 0,
+    demo: 0,
+    inProgress: 0,
+    future: 0,
+    projection: 0,
+    paused: 0
+  }
 
-  approvedPurchases.forEach(purchase => {
-    if (purchase.wallpaperNumbers && Array.isArray(purchase.wallpaperNumbers)) {
-      numbers.push(...purchase.wallpaperNumbers)
+  projectList.value.forEach(p => {
+    switch(p.status) {
+      case 'completed': stats.completed++; break
+      case 'demo': stats.demo++; break
+      case 'inprogress': stats.inProgress++; break
+      case 'future': stats.future++; break
+      case 'projection': stats.projection++; break
+      case 'paused': stats.paused++; break
     }
   })
 
-  return Array.from(new Set(numbers)).sort((a, b) => a - b) // Remove duplicates and sort
+  return stats
 })
 
-// Encontrar la compra ganadora
-const winnerPurchase = computed(() => {
-  if (!winnerNumber.value) return null
+// Datos para el gráfico de distribución
+const chartData = computed(() => {
+  const totalProjects = projectList.value.length
 
-  const approvedPurchases = purchasesByStatus.value.APPROVED || []
-  return approvedPurchases.find(purchase =>
-    purchase.wallpaperNumbers && purchase.wallpaperNumbers.includes(winnerNumber.value!)
-  )
+  // Si no hay proyectos, retornar datos vacíos
+  if (totalProjects === 0) {
+    return [
+      { status: 'demo', label: 'Demo', count: 0, percentage: 0 },
+      { status: 'inprogress', label: 'Ejecución', count: 0, percentage: 0 },
+      { status: 'completed', label: 'Terminados', count: 0, percentage: 0 },
+      { status: 'paused', label: 'Pausados', count: 0, percentage: 0 },
+      { status: 'future', label: 'Futuros', count: 0, percentage: 0 }
+    ]
+  }
+
+  // Usar tope fijo de 20 (20 = 100% altura)
+  const MAX_BAR = 20
+  const getVisualPercentage = (count: number) => {
+    if (count <= 0) return 0
+    const clamped = Math.min(count, MAX_BAR)
+    return (clamped / MAX_BAR) * 100
+  }
+
+  return [
+    {
+      status: 'demo',
+      label: 'Demo',
+      count: projectStats.value.demo,
+      percentage: getVisualPercentage(projectStats.value.demo)
+    },
+    {
+      status: 'inprogress',
+      label: 'Ejecución',
+      count: projectStats.value.inProgress,
+      percentage: getVisualPercentage(projectStats.value.inProgress)
+    },
+    {
+      status: 'completed',
+      label: 'Terminados',
+      count: projectStats.value.completed,
+      percentage: getVisualPercentage(projectStats.value.completed)
+    },
+    {
+      status: 'paused',
+      label: 'Pausados',
+      count: projectStats.value.paused,
+      percentage: getVisualPercentage(projectStats.value.paused)
+    },
+    {
+      status: 'future',
+      label: 'Futuros',
+      count: projectStats.value.future,
+      percentage: getVisualPercentage(projectStats.value.future)
+    }
+  ]
 })
 
-// Métodos
-const refreshData = async () => {
+// Función para obtener etiqueta de estado
+const getStatusLabel = (status: ProjectStatus): string => {
+  const option = STATUS_OPTIONS.find(opt => opt.value === status)
+  return option?.label || status
+}
+
+// Función para agregar nuevo proyecto
+const addNewProject = () => {
+  if (!newProject.value.name || !newProject.value.focus || !newProject.value.status) {
+    return
+  }
+
+  const maxId = Math.max(...projectList.value.map(p => p.id), 0)
+  const newProj: ProjectRow = {
+    id: maxId + 1,
+    name: newProject.value.name,
+    focus: newProject.value.focus,
+    status: newProject.value.status as ProjectStatus
+  }
+
+  projectList.value.push(newProj)
+
+  // Limpiar formulario
+  newProject.value = {
+    name: '',
+    focus: '',
+    status: ''
+  }
+}
+
+// Función para eliminar proyecto
+const removeProject = (projectId: number) => {
+  const index = projectList.value.findIndex(p => p.id === projectId)
+  if (index > -1) {
+    projectList.value.splice(index, 1)
+  }
+}
+
+// Persistencia en localStorage (proyectos completos)
+onMounted(() => {
   try {
-    isRefreshingWallpapers.value = true
-
-    // Refrescar compras y wallpapers en paralelo
-    await Promise.all([
-      getAllPurchases(),
-      refreshTakenNumbers()
-    ])
-
-  } catch (error) {
-    console.error('❌ Error actualizando datos:', error)
-  } finally {
-    isRefreshingWallpapers.value = false
-  }
-}
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('es-CO', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-const getStatusText = (status: string) => {
-  const statusMap = {
-    'PENDING': 'Pendiente',
-    'APPROVED': 'Aprobada',
-    'REJECTED': 'Rechazada',
-    'CANCELLED': 'Cancelada'
-  }
-  return statusMap[status as keyof typeof statusMap] || status
-}
-
-// Winner game methods
-const startWinnerGame = () => {
-  if (eligibleNumbers.value.length === 0) return
-
-  // Check if we have enough numbers for a complete game (at least 5 unique numbers recommended)
-  if (eligibleNumbers.value.length < 5) {
-    // Still allow the game but show a warning in console
-    console.warn(`⚠️ Solo hay ${eligibleNumbers.value.length} números elegibles. Se pueden repetir números en los intentos.`)
-  }
-
-  isGameStarted.value = true
-  isGameRunning.value = true
-  currentAttempt.value = 0
-  attempts.value = [null, null, null, null, null]
-  winnerNumber.value = null
-  isGameComplete.value = false
-  isShowingSpinEffect.value = false
-  spinningNumbers.value = [null, null, null, null, null]
-
-  // Pre-select the winner number (will be revealed on 5th attempt)
-  const randomIndex = Math.floor(Math.random() * eligibleNumbers.value.length)
-  winnerNumber.value = eligibleNumbers.value[randomIndex]
-}
-
-const nextAttempt = async () => {
-  if (currentAttempt.value >= 5 || isProcessingAttempt.value) return
-
-  isProcessingAttempt.value = true
-  currentAttempt.value++
-
-  // Get numbers that have already been used in previous attempts
-  const usedNumbers = attempts.value.filter(num => num !== null) as number[]
-
-  // Start spinning effect
-  isShowingSpinEffect.value = true
-
-  // Spin numbers for dramatic effect (2 seconds)
-  const spinDuration = 2000
-  const spinInterval = 100
-  const spinTimes = spinDuration / spinInterval
-
-  // Create a pool of available numbers for spinning effect (excluding used ones and winner)
-  const availableForSpinning = eligibleNumbers.value.filter(num =>
-    num !== winnerNumber.value && !usedNumbers.includes(num)
-  )
-
-  for (let i = 0; i < spinTimes; i++) {
-    // If we have available unique numbers, use them; otherwise use all eligible except winner
-    const spinPool = availableForSpinning.length > 0 ? availableForSpinning :
-                     eligibleNumbers.value.filter(num => num !== winnerNumber.value)
-
-    if (spinPool.length > 0) {
-      const randomIndex = Math.floor(Math.random() * spinPool.length)
-      spinningNumbers.value[currentAttempt.value - 1] = spinPool[randomIndex]
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const saved: ProjectRow[] = JSON.parse(raw)
+      if (Array.isArray(saved) && saved.length > 0) {
+        projectList.value = saved
+      }
     }
-    await new Promise(resolve => setTimeout(resolve, spinInterval))
-  }
-
-  // Stop spinning effect
-  isShowingSpinEffect.value = false
-
-  if (currentAttempt.value === 5) {
-    // Reveal the winner on 5th attempt
-    attempts.value[4] = winnerNumber.value
-    isGameComplete.value = true
-    isGameRunning.value = false
-  } else {
-    // Generate a random number from eligible numbers (excluding winner and previously used numbers)
-    let randomNumber
-    let availableNumbers = eligibleNumbers.value.filter(num =>
-      num !== winnerNumber.value && !usedNumbers.includes(num)
-    )
-
-    // If we don't have enough unique numbers (excluding the winner),
-    // allow previously used numbers but still exclude the winner
-    if (availableNumbers.length === 0) {
-      availableNumbers = eligibleNumbers.value.filter(num => num !== winnerNumber.value)
-    }
-
-    // Select a random number from available numbers
-    if (availableNumbers.length > 0) {
-      const randomIndex = Math.floor(Math.random() * availableNumbers.length)
-      randomNumber = availableNumbers[randomIndex]
-    } else {
-      // Fallback: use any eligible number except the winner
-      do {
-        const randomIndex = Math.floor(Math.random() * eligibleNumbers.value.length)
-        randomNumber = eligibleNumbers.value[randomIndex]
-      } while (randomNumber === winnerNumber.value && eligibleNumbers.value.length > 1)
-    }
-
-    attempts.value[currentAttempt.value - 1] = randomNumber
-  }
-
-  isProcessingAttempt.value = false
-}
-
-const resetGame = () => {
-  isGameStarted.value = false
-  currentAttempt.value = 0
-  attempts.value = [null, null, null, null, null]
-  winnerNumber.value = null
-  isGameComplete.value = false
-  isGameRunning.value = false
-  isProcessingAttempt.value = false
-  isShowingSpinEffect.value = false
-  spinningNumbers.value = [null, null, null, null, null]
-}
-
-// Cargar datos al montar el componente
-onMounted(async () => {
-  await refreshData()
+  } catch { /* noop */ }
 })
+
+watch(projectList, (list) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+}, { deep: true })
 </script>
 
 <style scoped>
@@ -411,38 +374,6 @@ onMounted(async () => {
   color: #ffffff;
   margin-bottom: 0.5rem;
   text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.dashboard-header p {
-  font-size: 1.1rem;
-  color: #cbd5e1;
-  margin-bottom: 2rem;
-}
-
-.refresh-btn {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  color: white;
-  border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 auto;
-}
-
-.refresh-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
-}
-
-.refresh-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
 }
 
 .error-message {
@@ -475,794 +406,781 @@ onMounted(async () => {
   justify-content: center;
 }
 
-.loading-state {
-  text-align: center;
-  padding: 4rem 0;
-  color: #cbd5e1;
-}
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(96, 165, 250, 0.3);
-  border-top: 4px solid #60a5fa;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 2rem auto;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 .dashboard-content {
   display: flex;
   flex-direction: column;
   gap: 3rem;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+/* ================== COMPANY STATIC DASHBOARD (Hardcoded) ================== */
+.new-project-section {
+  background: rgba(30,41,59,0.55);
+  border: 1px solid rgba(96,165,250,0.18);
+  padding: 2rem;
+  border-radius: 18px;
   margin-bottom: 2rem;
 }
 
-.stat-card {
-  background: rgba(30, 41, 59, 0.8);
-  border-radius: 12px;
-  padding: 1.2rem;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  transition: all 0.3s ease;
-  min-height: auto;
-}
-
-.stat-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(96, 165, 250, 0.5);
-  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.2);
-}
-
-.stat-icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.new-project-section .section-head h3 {
+  margin: 0 0 1rem;
   font-size: 1.4rem;
-  flex-shrink: 0;
+  font-weight: 700;
+  background: linear-gradient(90deg,#fff,#cbd5e1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.stat-card.total .stat-icon {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+.new-project-form {
+  width: 100%;
 }
 
-.stat-card.revenue .stat-icon {
+.form-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.2fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.form-input, .form-select {
+  background: rgba(15,23,42,0.6);
+  border: 1px solid rgba(96,165,250,0.2);
+  color: #e2e8f0;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: rgba(96,165,250,0.6);
+  box-shadow: 0 0 0 3px rgba(96,165,250,0.1);
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
+.add-btn {
   background: linear-gradient(135deg, #10b981, #059669);
-}
-
-.stat-card.wallpapers .stat-icon {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-
-.stat-card.pending .stat-icon {
-  background: linear-gradient(135deg, #f97316, #ea580c);
-}
-
-.stat-content h3 {
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 12px;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #cbd5e1;
-  margin-bottom: 0.3rem;
-  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.3s ease;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.stat-number {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: #ffffff;
-  margin: 0;
-  line-height: 1.1;
+.add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }
 
-/* Winner Selection Styles */
-.winner-selection-section {
-  background: rgba(30, 41, 59, 0.6);
-  border-radius: 16px;
+.company-stats-section {
+  background: rgba(30,41,59,0.55);
+  border: 1px solid rgba(96,165,250,0.18);
   padding: 2rem;
-  margin-bottom: 3rem;
-  border: 1px solid rgba(96, 165, 250, 0.2);
-}
-
-.winner-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.winner-header h3 {
-  color: #ffffff;
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.winner-header p {
-  color: #cbd5e1;
-  font-size: 1rem;
-}
-
-.winner-stats {
+  border-radius: 18px;
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 2rem;
+  flex-direction: column;
   gap: 2rem;
 }
 
-.eligible-numbers,
-.total-revenue {
-  text-align: center;
-  background: rgba(15, 23, 42, 0.4);
-  padding: 1rem;
-  border-radius: 12px;
-  flex: 1;
-}
-
-.stat-label {
-  display: block;
-  color: #94a3b8;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.stat-value {
-  color: #60a5fa;
-  font-size: 1.5rem;
+.company-stats-section .section-head h2 {
+  margin: 0 0 .4rem;
+  font-size: 1.8rem;
   font-weight: 700;
+  background: linear-gradient(90deg,#fff,#cbd5e1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.winner-game-container {
-  text-align: center;
-}
-
-.game-start {
-  padding: 2rem;
-}
-
-.start-game-btn {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 1rem;
-}
-
-.start-game-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
-}
-
-.start-game-btn:disabled {
-  background: #6b7280;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.game-hint {
+.company-stats-section .section-head p {
+  margin: 0;
   color: #94a3b8;
-  font-style: italic;
+  font-size: .9rem;
 }
 
-.warning-text {
-  color: #f59e0b;
-  font-weight: 600;
+.company-stats-grid {
+  display: grid;
+  gap: 1.2rem;
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
 }
 
-.success-text {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.game-active {
-  padding: 2rem;
-}
-
-.attempts-container h4 {
-  color: #ffffff;
-  font-size: 1.3rem;
-  margin-bottom: 1.5rem;
-}
-
-.attempts-display {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.attempt-number {
-  width: 80px;
-  height: 80px;
-  background: rgba(15, 23, 42, 0.6);
-  border: 2px solid #475569;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #94a3b8;
-  transition: all 0.3s ease;
-}
-
-.attempt-number.current {
-  border-color: #60a5fa;
-  background: rgba(96, 165, 250, 0.1);
-  color: #60a5fa;
-  animation: pulse 2s infinite;
-}
-
-.attempt-number.revealed {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.2);
-  color: #ffffff;
-}
-
-.attempt-number.spinning {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.2);
-  color: #ffffff;
-  animation: spin-effect 0.1s linear infinite;
-  transform-origin: center;
-}
-
-@keyframes spin-effect {
-  0% {
-    transform: rotateY(0deg) scale(1);
-    background: rgba(245, 158, 11, 0.2);
-  }
-  25% {
-    transform: rotateY(90deg) scale(1.1);
-    background: rgba(239, 68, 68, 0.2);
-  }
-  50% {
-    transform: rotateY(180deg) scale(1);
-    background: rgba(139, 92, 246, 0.2);
-  }
-  75% {
-    transform: rotateY(270deg) scale(1.1);
-    background: rgba(34, 197, 94, 0.2);
-  }
-  100% {
-    transform: rotateY(360deg) scale(1);
-    background: rgba(245, 158, 11, 0.2);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.next-attempt-btn {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.next-attempt-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-}
-
-.next-attempt-btn:disabled {
-  background: #6b7280;
-  cursor: not-allowed;
-}
-
-.winner-reveal {
-  margin-top: 2rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+.cstat-card {
+  position: relative;
+  background: linear-gradient(135deg,rgba(15,23,42,0.75),rgba(51,65,85,0.7));
+  border: 1px solid rgba(96,165,250,0.18);
   border-radius: 16px;
-  border: 2px solid rgba(16, 185, 129, 0.3);
-}
-
-.winner-announcement h2 {
-  color: #10b981;
-  font-size: 2rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
-  animation: bounce 1s ease-in-out;
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-10px); }
-  60% { transform: translateY(-5px); }
-}
-
-.winner-number-display {
-  font-size: 4rem;
-  font-weight: 900;
-  color: #ffffff;
-  background: linear-gradient(135deg, #10b981, #059669);
-  border-radius: 20px;
-  padding: 1rem 2rem;
-  margin: 1rem 0;
-  display: inline-block;
-  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  animation: glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes glow {
-  from { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
-  to { box-shadow: 0 0 30px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.6); }
-}
-
-.winner-details {
-  margin-top: 2rem;
-  background: rgba(15, 23, 42, 0.4);
-  border-radius: 12px;
-  padding: 1.5rem;
-  text-align: left;
-}
-
-.winner-details h4 {
-  color: #60a5fa;
-  margin-bottom: 1rem;
-}
-
-.winner-details p {
-  color: #e2e8f0;
-  margin-bottom: 0.5rem;
-}
-
-.reset-game-btn {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 2rem;
-}
-
-.reset-game-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
-}
-
-.filter-section {
-  margin-bottom: 3rem;
-}
-
-.filter-header {
+  padding: 1.1rem 1rem 1.2rem;
   display: flex;
-  justify-content: space-between;
+  gap: .9rem;
+  align-items: flex-start;
+  overflow: hidden;
+  transition: .35s ease;
+}
+
+.cstat-card:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 15%,rgba(96,165,250,0.25),transparent 60%);
+  opacity: .55;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+.cstat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(96,165,250,0.4);
+  box-shadow: 0 10px 28px -6px rgba(0,0,0,0.45);
+}
+
+.cstat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
   align-items: center;
-  margin-bottom: 1rem;
+  justify-content: center;
+  font-size: 1.35rem;
+  background: linear-gradient(135deg,#3b82f6,#1d4ed8);
+  box-shadow: 0 4px 14px -3px rgba(59,130,246,0.55);
+  flex-shrink: 0;
 }
 
-.filter-section h3 {
-  color: #ffffff;
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  font-weight: 700;
+.cstat-card.demo .cstat-icon {
+  background: linear-gradient(135deg,#6366f1,#4f46e5);
+  box-shadow: 0 4px 14px -3px rgba(99,102,241,0.55);
+}.cstat-card.in-progress .cstat-icon {
+  background: linear-gradient(135deg,#f59e0b,#b45309);
+  box-shadow: 0 4px 14px -3px rgba(245,158,11,0.55);
 }
 
-.refresh-btn {
-  padding: 0.6rem 1rem;
-  background: linear-gradient(135deg, #059669, #047857);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9rem;
+.cstat-card.future .cstat-icon {
+  background: linear-gradient(135deg,#10b981,#059669);
+  box-shadow: 0 4px 14px -3px rgba(16,185,129,0.55);
+}
+
+.cstat-content h4 {
+  margin: 0 0 .25rem;
+  font-size: .78rem;
+  letter-spacing: .12em;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.cstat-number {
+  margin: 0 0 .15rem;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.05;
+}
+
+.cstat-content small {
+  font-size: .65rem;
+  letter-spacing: .08em;
+  color: #9ca9b7;
+}
+
+.projects-panels {
   display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Área principal de proyectos ampliada */
+.main-projects {
+  min-height: 600px;
+}
+
+.main-projects .projects-grid {
+  max-height: 550px;
+}
+
+/* Gráfico de distribución */
+.stats-chart {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.distribution-chart {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 0.75rem;
+  min-height: 220px;
+  padding: 0.5rem 0.5rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.y-guides {
+  position: relative;
+  display: grid;
+  grid-template-rows: repeat(5, 1fr);
+  align-items: end;
+  color: #64748b;
+  font-size: 0.7rem;
+  letter-spacing: .04em;
+}
+
+.y-guides span {
+  position: relative;
+}
+
+.y-guides span::after {
+  content: "";
+  position: absolute;
+  left: 3.2rem;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1px;
+  background: linear-gradient(90deg, rgba(148,163,184,0.25), rgba(148,163,184,0.08));
+}
+
+.chart-items {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: end;
+  gap: 1rem;
+  position: relative;
+}
+
+.chart-items::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  height: 2px;
+  background: rgba(148,163,184,0.25);
+  border-radius: 2px;
+}
+
+.chart-item {
+  min-width: 70px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 0.5rem;
 }
 
-.refresh-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #047857, #065f46);
-  transform: translateY(-1px);
-}
-
-.refresh-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.refresh-btn span {
-  display: inline-block;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.status-filters {
-  display: flex;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-}
-
-.filter-btn {
-  padding: 0.8rem 1.2rem;
-  border: 2px solid rgba(96, 165, 250, 0.3);
-  background: rgba(51, 65, 85, 0.6);
-  color: #e2e8f0;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-}
-
-.filter-btn:hover {
-  border-color: #60a5fa;
-  background: rgba(96, 165, 250, 0.1);
-}
-
-.filter-btn.active {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  border-color: #60a5fa;
-  color: white;
-}
-
-.filter-btn.pending.active {
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  border-color: #f97316;
-}
-
-.filter-btn.approved.active {
-  background: linear-gradient(135deg, #10b981, #059669);
-  border-color: #10b981;
-}
-
-.filter-btn.rejected.active {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  border-color: #ef4444;
-}
-
-.filter-btn.cancelled.active {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
-  border-color: #6b7280;
-}
-
-.purchases-section h3 {
-  color: #ffffff;
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  font-weight: 700;
-}
-
-.no-purchases {
-  text-align: center;
-  padding: 3rem;
-  color: #94a3b8;
-  background: rgba(30, 41, 59, 0.5);
-  border-radius: 12px;
-  border: 1px solid rgba(96, 165, 250, 0.1);
-}
-
-.purchases-table-container {
-  background: rgba(30, 41, 59, 0.8);
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(96, 165, 250, 0.2);
-}
-
-.purchases-table {
+.bar-wrapper {
+  position: relative;
   width: 100%;
-  border-collapse: collapse;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
-.purchases-table th {
-  background: rgba(15, 23, 42, 0.8);
+.bar-value {
+  position: absolute;
+  top: -18px;
+  background: rgba(15,23,42,0.85);
+  border: 1px solid rgba(148,163,184,0.35);
   color: #e2e8f0;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid rgba(96, 165, 250, 0.2);
-  font-size: 0.9rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
 
-.purchases-table td {
-  padding: 1rem;
-  border-bottom: 1px solid rgba(96, 165, 250, 0.1);
-  color: #cbd5e1;
-  vertical-align: top;
+.chart-bar {
+  width: 100%;
+  min-height: 6px;
+  border-radius: 6px 6px 0 0;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
 }
 
-.purchase-row:hover {
-  background: rgba(96, 165, 250, 0.05);
+.chart-bar:hover {
+  transform: scaleY(1.08) translateY(-2px);
+  filter: brightness(1.1);
 }
 
-.purchase-id {
-  font-weight: 700;
-  color: #60a5fa;
+/* Barras con 0 proyectos no tendrán altura mínima */
+.chart-item[data-count="0"] .chart-bar {
+  min-height: 0px !important;
+  opacity: 0.2;
 }
 
-.buyer-name {
+.chart-demo .chart-bar { background: linear-gradient(180deg, #818cf8, #6366f1); }
+.chart-inprogress .chart-bar { background: linear-gradient(180deg, #60a5fa, #3b82f6); }
+.chart-completed .chart-bar { background: linear-gradient(180deg, #34d399, #10b981); }
+.chart-paused .chart-bar { background: linear-gradient(180deg, #fbbf24, #f59e0b); }
+.chart-future .chart-bar { background: linear-gradient(180deg, #fb7185, #f43f5e); }
+
+.chart-label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-align: center;
   font-weight: 600;
+}
+
+.chart-count {
+  font-size: 1.2rem;
+  font-weight: 700;
   color: #ffffff;
 }
 
-.buyer-email {
-  font-size: 0.9rem;
-  color: #94a3b8;
+/* Gestión profesional de proyectos */
+.projects-professional {
+  overflow: hidden;
 }
 
-.buyer-contact {
-  font-size: 0.9rem;
-  color: #cbd5e1;
-  font-weight: 500;
+/* ===== Horizontal Bar Chart ===== */
+.hbar-chart {
+  margin-top: 1rem;
 }
 
-.wallpapers {
-  max-width: 400px;
-}
-
-.wallpaper-numbers {
+.hbar-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-bottom: 0.5rem;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-.wallpaper-tag {
-  background: rgba(96, 165, 250, 0.2);
-  color: #60a5fa;
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
+.hbar-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 40px;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.hbar-label {
+  color: #cbd5e1;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
-.wallpaper-count {
-  color: #94a3b8;
-  font-size: 0.8rem;
+.hbar-track {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(148,163,184,0.25);
+  border-radius: 10px;
+  height: 14px;
+  overflow: hidden;
 }
 
-.amount {
+.hbar-fill {
+  height: 100%;
+  border-radius: 9px;
+  transition: width .35s ease;
+}
+
+.hbar-demo { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.hbar-inprogress { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.hbar-completed { background: linear-gradient(90deg, #10b981, #34d399); }
+.hbar-paused { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.hbar-future { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+
+.hbar-value {
+  color: #e2e8f0;
   font-weight: 700;
-  color: #10b981;
+  font-size: 0.9rem;
+  text-align: right;
 }
 
-.status-badge {
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(96,165,250,0.15);
+}
+
+.panel-header h4 {
+  margin: 0;
+}
+
+.project-counter {
+  background: rgba(96,165,250,0.15);
+  color: #60a5fa;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
+  border: 1px solid rgba(96,165,250,0.25);
+}
+
+.projects-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.projects-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.projects-grid::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 2px;
+}
+
+.projects-grid::-webkit-scrollbar-thumb {
+  background: rgba(96,165,250,0.3);
+  border-radius: 2px;
+}
+
+.project-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-card:hover {
+  border-color: rgba(96,165,250,0.3);
+  background: rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+}
+
+.project-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 0.8rem;
+}
+
+.project-info h5 {
+  margin: 0 0 0.3rem 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.project-focus {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.project-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.status-dropdown {
+  background: rgba(15,23,42,0.7);
+  border: 1px solid rgba(96,165,250,0.2);
+  color: #e2e8f0;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 120px;
+  transition: all 0.3s ease;
+}
+
+.delete-btn {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #ef4444;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 36px;
+}
+
+.delete-btn:hover {
+  background: rgba(239,68,68,0.2);
+  border-color: rgba(239,68,68,0.5);
+  transform: scale(1.05);
+}
+
+.delete-btn:active {
+  transform: scale(0.95);
+}
+
+.status-dropdown:focus {
+  outline: none;
+  border-color: rgba(96,165,250,0.5);
+  box-shadow: 0 0 0 2px rgba(96,165,250,0.1);
+}
+
+.status-demo { border-color: rgba(99,102,241,0.4); }
+.status-inprogress { border-color: rgba(59,130,246,0.4); }
+.status-completed { border-color: rgba(16,185,129,0.4); }
+.status-paused { border-color: rgba(245,158,11,0.4); }
+.status-future { border-color: rgba(244,63,94,0.4); }
+.status-projection { border-color: rgba(14,165,233,0.4); }
+
+.project-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.indicator-demo {
+  background: rgba(99,102,241,0.15);
+  color: #818cf8;
+  border-color: rgba(99,102,241,0.3);
+}
+.indicator-demo .status-dot { background: #6366f1; }
+
+.indicator-inprogress {
+  background: rgba(59,130,246,0.15);
+  color: #60a5fa;
+  border-color: rgba(59,130,246,0.3);
+}
+.indicator-inprogress .status-dot { background: #3b82f6; }
+
+.indicator-completed {
+  background: rgba(16,185,129,0.15);
+  color: #34d399;
+  border-color: rgba(16,185,129,0.3);
+}
+.indicator-completed .status-dot { background: #10b981; }
+
+.indicator-paused {
+  background: rgba(245,158,11,0.15);
+  color: #fbbf24;
+  border-color: rgba(245,158,11,0.3);
+}
+.indicator-paused .status-dot { background: #f59e0b; }
+
+.indicator-future {
+  background: rgba(244,63,94,0.15);
+  color: #fb7185;
+  border-color: rgba(244,63,94,0.3);
+}
+.indicator-future .status-dot { background: #f43f5e; }
+
+.indicator-projection {
+  background: rgba(14,165,233,0.15);
+  color: #38bdf8;
+  border-color: rgba(14,165,233,0.3);
+}
+.indicator-projection .status-dot { background: #0ea5e9; }
+
+.project-id {
+  font-size: 0.7rem;
+  color: #6b7280;
+  font-weight: 600;
+  background: rgba(255,255,255,0.05);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+/* Mensaje cuando no hay proyectos */
+.empty-projects {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #94a3b8;
+  background: rgba(255,255,255,0.02);
+  border: 2px dashed rgba(96,165,250,0.2);
+  border-radius: 16px;
+  margin: 1rem 0;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.empty-projects h5 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.empty-projects p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+/* Sección de distribución abajo */
+.distribution-section {
+  margin-top: 1rem;
+}
+
+.distribution-section .panel {
+  max-width: 600px;
+  margin: 0 auto;
+}.panel {
+  background: rgba(15,23,42,0.55);
+  border: 1px solid rgba(96,165,250,0.18);
+  border-radius: 18px;
+  padding: 1.2rem 1rem 1.3rem;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: .9rem;
+}
+
+.panel h4 {
+  margin: 0 0 .2rem;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  color: #fff;
+}
+
+.focus-panel .focus-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+
+.focus-panel .focus-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: .6rem .7rem;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+}
+
+.fi-label {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: #d7e2ec;
+}
+
+.fi-badge {
+  font-size: .55rem;
+  letter-spacing: .15em;
+  font-weight: 700;
+  padding: .32rem .55rem .28rem;
+  border-radius: 12px;
+  background: rgba(96,165,250,0.18);
+  color: #60a5fa;
+  border: 1px solid rgba(96,165,250,0.32);
+}
+
+.fi-badge.prio-alta {
+  background: rgba(239,68,68,0.25);
+  color: #ef4444;
+  border-color: rgba(239,68,68,0.45);
+}
+
+.fi-badge.prio-media {
+  background: rgba(245,158,11,0.25);
+  color: #f59e0b;
+  border-color: rgba(245,158,11,0.45);
+}
+
+.fi-badge.prio-baja {
+  background: rgba(16,185,129,0.25);
+  color: #10b981;
+  border-color: rgba(16,185,129,0.45);
+}
+
+.focus-panel .note {
+  margin: .7rem 0 0;
+  font-size: .58rem;
+  letter-spacing: .12em;
+  color: #7e8b96;
   text-transform: uppercase;
 }
 
-.status-badge.pending {
-  background: rgba(249, 115, 22, 0.2);
-  color: #f97316;
-  border: 1px solid rgba(249, 115, 22, 0.3);
-}
-
-.status-badge.approved {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.status-badge.rejected {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.status-badge.cancelled {
-  background: rgba(107, 114, 128, 0.2);
-  color: #6b7280;
-  border: 1px solid rgba(107, 114, 128, 0.3);
-}
-
-.date {
-  font-size: 0.9rem;
-  color: #94a3b8;
-  white-space: nowrap;
-}
-
-/* ================== COMPANY STATIC DASHBOARD (Hardcoded) ================== */
-.company-stats-section { background:rgba(30,41,59,0.55); border:1px solid rgba(96,165,250,0.18); padding:2rem; border-radius:18px; display:flex; flex-direction:column; gap:2rem; }
-.company-stats-section .section-head h2 { margin:0 0 .4rem; font-size:1.8rem; font-weight:700; background:linear-gradient(90deg,#fff,#cbd5e1); -webkit-background-clip:text; background-clip:text; color:transparent; }
-.company-stats-section .section-head p { margin:0; color:#94a3b8; font-size:.9rem; }
-.company-stats-grid { display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
-.cstat-card { position:relative; background:linear-gradient(135deg,rgba(15,23,42,0.75),rgba(51,65,85,0.7)); border:1px solid rgba(96,165,250,0.18); border-radius:16px; padding:1.1rem 1rem 1.2rem; display:flex; gap:.9rem; align-items:flex-start; overflow:hidden; transition:.35s ease; }
-.cstat-card:before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 20% 15%,rgba(96,165,250,0.25),transparent 60%); opacity:.55; pointer-events:none; mix-blend-mode:overlay; }
-.cstat-card:hover { transform:translateY(-4px); border-color:rgba(96,165,250,0.4); box-shadow:0 10px 28px -6px rgba(0,0,0,0.45); }
-.cstat-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.35rem; background:linear-gradient(135deg,#3b82f6,#1d4ed8); box-shadow:0 4px 14px -3px rgba(59,130,246,0.55); flex-shrink:0; }
-.cstat-card.employees .cstat-icon { background:linear-gradient(135deg,#ec4899,#db2777); box-shadow:0 4px 14px -3px rgba(236,72,153,0.55); }
-.cstat-card.in-progress .cstat-icon { background:linear-gradient(135deg,#f59e0b,#b45309); box-shadow:0 4px 14px -3px rgba(245,158,11,0.55); }
-.cstat-card.future .cstat-icon { background:linear-gradient(135deg,#10b981,#059669); box-shadow:0 4px 14px -3px rgba(16,185,129,0.55); }
-.cstat-content h4 { margin:0 0 .25rem; font-size:.78rem; letter-spacing:.12em; font-weight:600; text-transform:uppercase; color:#94a3b8; }
-.cstat-number { margin:0 0 .15rem; font-size:1.55rem; font-weight:700; color:#fff; line-height:1.05; }
-.cstat-content small { font-size:.65rem; letter-spacing:.08em; color:#9ca9b7; }
-
-.projects-panels { display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
-.panel { background:rgba(15,23,42,0.55); border:1px solid rgba(96,165,250,0.18); border-radius:18px; padding:1.2rem 1rem 1.3rem; position:relative; overflow:hidden; display:flex; flex-direction:column; gap:.9rem; }
-.panel h4 { margin:0 0 .2rem; font-size:.95rem; font-weight:700; letter-spacing:.5px; color:#fff; }
-.mini-chart .sparkline { display:flex; align-items:flex-end; gap:3px; height:90px; margin-top:.4rem; }
-.mini-chart .sparkline .bar { flex:1; background:linear-gradient(180deg,#60a5fa,#2563eb); border-radius:4px 4px 2px 2px; transition:.3s ease; position:relative; }
-.mini-chart .sparkline .bar:hover { filter:brightness(1.1); transform:translateY(-4px); }
-.legend { list-style:none; display:flex; gap:.9rem; margin:.6rem 0 0; padding:0; flex-wrap:wrap; }
-.legend li { font-size:.62rem; letter-spacing:.12em; color:#94a3b8; display:flex; align-items:center; gap:.35rem; }
-.legend .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
-.legend .dot.completed { background:#10b981; }
-.legend .dot.inprogress { background:#3b82f6; }
-.legend .dot.future { background:#f59e0b; }
-
-.projects-table-panel { overflow:hidden; }
-.projects-table { width:100%; border-collapse:collapse; font-size:.72rem; }
-.projects-table th { text-align:left; padding:.6rem .65rem; background:rgba(30,41,59,0.6); font-weight:600; letter-spacing:.12em; font-size:.6rem; color:#93a3b6; text-transform:uppercase; border-bottom:1px solid rgba(96,165,250,0.18); }
-.projects-table td { padding:.55rem .65rem; border-bottom:1px solid rgba(96,165,250,0.09); color:#d2dde7; }
-.p-name { font-weight:600; color:#fff; }
-.p-owner { color:#b9c6d3; font-size:.65rem; }
-.p-eta { font-size:.65rem; color:#9ca9b7; }
-.p-badge { display:inline-block; padding:.35rem .55rem .3rem; border-radius:14px; font-size:.55rem; letter-spacing:.12em; font-weight:600; text-transform:uppercase; background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.25); }
-.p-badge.status-completed { background:rgba(16,185,129,0.2); color:#10b981; border-color:rgba(16,185,129,0.35); }
-.p-badge.status-inprogress { background:rgba(59,130,246,0.22); color:#3b82f6; border-color:rgba(59,130,246,0.38); }
-.p-badge.status-paused { background:rgba(234,179,8,0.22); color:#eab308; border-color:rgba(234,179,8,0.4); }
-.p-badge.status-future { background:rgba(245,158,11,0.22); color:#f59e0b; border-color:rgba(245,158,11,0.4); }
-
-.focus-panel .focus-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.55rem; }
-.focus-panel .focus-list li { display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); padding:.6rem .7rem; border-radius:12px; backdrop-filter:blur(4px); }
-.fi-label { font-size:.65rem; font-weight:600; letter-spacing:.04em; color:#d7e2ec; }
-.fi-badge { font-size:.55rem; letter-spacing:.15em; font-weight:700; padding:.32rem .55rem .28rem; border-radius:12px; background:rgba(96,165,250,0.18); color:#60a5fa; border:1px solid rgba(96,165,250,0.32); }
-.fi-badge.prio-alta { background:rgba(239,68,68,0.25); color:#ef4444; border-color:rgba(239,68,68,0.45); }
-.fi-badge.prio-media { background:rgba(245,158,11,0.25); color:#f59e0b; border-color:rgba(245,158,11,0.45); }
-.fi-badge.prio-baja { background:rgba(16,185,129,0.25); color:#10b981; border-color:rgba(16,185,129,0.45); }
-.focus-panel .note { margin:.7rem 0 0; font-size:.58rem; letter-spacing:.12em; color:#7e8b96; text-transform:uppercase; }
-
-@media (max-width: 880px){
-  .projects-panels { grid-template-columns:1fr; }
-}
-
 /* Responsive */
-@media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+@media (max-width: 880px) {
+  .projects-panels {
+    grid-template-columns: 1fr;
   }
 
-  .purchases-table-container {
-    overflow-x: auto;
-  }
-
-  .purchases-table {
-    min-width: 800px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 0 1rem;
-  }
-
-  .winner-stats {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .attempts-display {
-    flex-wrap: wrap;
+  .form-row {
+    grid-template-columns: 1fr;
     gap: 0.8rem;
   }
 
-  .attempt-number {
-    width: 60px;
-    height: 60px;
-    font-size: 1.2rem;
+  .add-btn {
+    justify-self: start;
+    width: fit-content;
   }
 
-  .winner-number-display {
-    font-size: 3rem;
-    padding: 0.8rem 1.5rem;
+  .distribution-chart {
+    height: 120px;
   }
-
-  .winner-selection-section {
-    padding: 1.5rem;
+}@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0 1rem;
   }
-
 
   .dashboard-header h1 {
     font-size: 2rem;
   }
 
-  .stats-grid {
+  .company-stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
     gap: 0.8rem;
-  }
-
-  .status-filters {
-    flex-direction: column;
-  }
-
-  .filter-btn {
-    width: 100%;
-    text-align: center;
   }
 }
 
 @media (max-width: 480px) {
-  .stats-grid {
+  .dashboard-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .company-stats-grid {
     grid-template-columns: 1fr;
     gap: 0.8rem;
-  }
-
-  .attempts-display {
-    gap: 0.5rem;
-  }
-
-  .attempt-number {
-    width: 50px;
-    height: 50px;
-    font-size: 1rem;
-  }
-
-  .winner-number-display {
-    font-size: 2.5rem;
-    padding: 0.6rem 1rem;
-  }
-
-  .start-game-btn,
-  .next-attempt-btn,
-  .reset-game-btn {
-    width: 100%;
-    padding: 1rem;
-  }
-
-  .winner-header h3 {
-    font-size: 1.5rem;
   }
 }
 </style>

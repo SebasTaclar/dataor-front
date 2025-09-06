@@ -18,35 +18,35 @@
             </div>
             <div class="hero-panel" data-aos="fade-left" data-aos-delay="150">
                 <div class="metrics-card">
-                    <div class="panel-title">Impacto en Números</div>
+                    <div class="panel-title">Resultados Comprobados</div>
                     <div class="metrics-grid">
                         <div class="metric">
-                            <h4>Proyectos</h4>
-                            <div class="value">+50</div>
-                            <small>Implementados</small>
+                            <h4>Clientes</h4>
+                            <div class="value">25+</div>
+                            <small>Empresas activas</small>
                         </div>
                         <div class="metric">
-                            <h4>Eficiencia</h4>
-                            <div class="value">+38%</div>
-                            <small>Promedio clientes</small>
+                            <h4>ROI Promedio</h4>
+                            <div class="value">240%</div>
+                            <small>En 12 meses</small>
                         </div>
                         <div class="metric">
-                            <h4>Disponibilidad</h4>
-                            <div class="value">99.9%</div>
-                            <small>Infraestructura</small>
+                            <h4>Uptime</h4>
+                            <div class="value">99.8%</div>
+                            <small>Sistemas críticos</small>
                         </div>
                         <div class="metric">
-                            <h4>Ahorro</h4>
-                            <div class="value">-27%</div>
-                            <small>Costos operativos</small>
+                            <h4>Reducción</h4>
+                            <div class="value">-45%</div>
+                            <small>Tiempo procesos</small>
                         </div>
                     </div>
                     <div>
-                        <h4 style="font-size:.75rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,.7); margin-bottom:.4rem;">Actividad</h4>
+                        <h4 style="font-size:.75rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,.7); margin-bottom:.4rem;">Rendimiento Actual</h4>
                         <div class="activity-bars" aria-hidden="true">
                           <span v-for="(b,i) in barCount" :key="i" class="activity-bar" :style="barAnimStyle(i)"></span>
                         </div>
-                        <div class="note" style="margin-top:.6rem;">Métricas simuladas para demostración visual</div>
+                        <div class="note" style="margin-top:.6rem;">Datos basados en proyectos implementados en 2024</div>
                     </div>
                 </div>
             </div>

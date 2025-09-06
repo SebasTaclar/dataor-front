@@ -13,6 +13,19 @@
       >
       <span class="social-tooltip">WhatsApp</span>
     </a>
+    <a
+      href="https://www.instagram.com/dataor52/?igsh=MWV3MHB3aTB5N3pwNA%3D%3D#"
+      target="_blank"
+      rel="noopener"
+      class="social-btn instagram"
+    >
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"
+        alt="Instagram"
+        class="social-icon"
+      >
+      <span class="social-tooltip">Instagram</span>
+    </a>
   </div>
 </template>
 

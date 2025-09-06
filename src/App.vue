@@ -128,7 +128,7 @@ onMounted(() => {
   handleScroll();
   const move = (e:MouseEvent)=>{ targetX = e.clientX; targetY = e.clientY }
   window.addEventListener('mousemove', move, { passive:true })
-  const animate=()=>{ currentX += (targetX - currentX)*0.18; currentY += (targetY - currentY)*0.18; if(cursorDot.value){ cursorDot.value.style.transform = `translate3d(${currentX}px,${currentY}px,0)` } dotRAF = requestAnimationFrame(animate) }
+  const animate=()=>{ currentX += (targetX - currentX)*0.08; currentY += (targetY - currentY)*0.08; if(cursorDot.value){ cursorDot.value.style.transform = `translate3d(${currentX}px,${currentY}px,0)` } dotRAF = requestAnimationFrame(animate) }
   dotRAF = requestAnimationFrame(animate)
   // accesibilidad: ocultar si user prefiere movimiento reducido
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches && cursorDot.value){ cursorDot.value.style.display='none' }
@@ -146,7 +146,7 @@ watch(route, () => {
 </script>
 
 <style scoped>
-.cursor-dot { position:fixed; top:0; left:0; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; pointer-events:none; z-index:4000; background:radial-gradient(circle at 30% 30%, #7df0ff, #32b8ff 55%, #0066ff 100%); mix-blend-mode:screen; filter:blur(0.5px) drop-shadow(0 0 8px rgba(70,190,255,.75)); transition:opacity .35s ease; }
+.cursor-dot { position:fixed; top:0; left:0; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; pointer-events:none; z-index:4000; background:radial-gradient(circle at 30% 30%, rgba(125,240,255,0.4), rgba(50,184,255,0.3) 55%, rgba(0,102,255,0.2) 100%); mix-blend-mode:screen; filter:blur(0.8px) drop-shadow(0 0 4px rgba(70,190,255,.3)); transition:opacity .35s ease; }
 @media (max-width:820px){ .cursor-dot { display:none; } }
 
 /* Navbar interno (contenedor de elementos) */
@@ -277,13 +277,13 @@ watch(route, () => {
 }
 
 .access-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #131586 0%, #8d8796 100%);
   color: #ffffff;
   box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
 }
 
 .access-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #131586 0%, #8d8796 100%);
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
   transform: translateY(-2px);
 }
