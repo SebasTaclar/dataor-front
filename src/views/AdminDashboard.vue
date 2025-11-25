@@ -1,9 +1,14 @@
 <template>
   <div class="admin-dashboard">
     <div class="dashboard-container">
-      <!-- Header -->
+      <!-- Header con navegación -->
       <div class="dashboard-header">
-        <h1>Panel de Administración</h1>
+        <h1>Panel de Administración - Proyectos</h1>
+        <div class="admin-nav-buttons">
+          <RouterLink to="/admin" class="nav-btn active">Proyectos</RouterLink>
+          <RouterLink to="/admin/clientes" class="nav-btn">Clientes</RouterLink>
+          <RouterLink to="/admin/cotizaciones" class="nav-btn">Cotizaciones</RouterLink>
+        </div>
       </div>
 
       <!-- Error Message -->
@@ -1181,6 +1186,46 @@ watch(projectList, (list) => {
   .company-stats-grid {
     grid-template-columns: 1fr;
     gap: 0.8rem;
+  }
+}
+
+/* Botones de navegación del admin */
+.admin-nav-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.nav-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+  .admin-nav-buttons {
+    gap: 0.5rem;
+  }
+
+  .nav-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
   }
 }
 </style>

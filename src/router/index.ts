@@ -28,9 +28,18 @@ const router = createRouter({
       },
     },
     {
-      path: '/admin',
-      name: 'admin-dashboard',
-      component: () => import('../views/AdminDashboard.vue'),
+      path: '/admin/clientes',
+      name: 'admin-clients',
+      component: () => import('../views/AdminClients.vue'),
+      meta: {
+        requiresAuth: true,
+        requiredRole: 'admin', // Solo accesible para administradores
+      },
+    },
+    {
+      path: '/admin/cotizaciones',
+      name: 'admin-quotations',
+      component: () => import('../views/AdminQuotations.vue'),
       meta: {
         requiresAuth: true,
         requiredRole: 'admin', // Solo accesible para administradores

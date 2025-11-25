@@ -2,7 +2,7 @@
 export const API_CONFIG = {
   baseURL: import.meta.env.DEV
     ? 'http://localhost:7071/api/v1'
-    : 'https://soydanirodriguezz-back-c3a4gvcqbrg8fcew.centralus-01.azurewebsites.net/api/v1',
+    : 'https://dataor-back-abepahavcedfh7gw.centralus-01.azurewebsites.net/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -108,6 +108,28 @@ export class ApiClient {
     const requestOptions: RequestInit = {
       ...options,
       method: 'PUT',
+    }
+
+    // Si el body es FormData, no lo serialices ni pongas Content-Type
+    if (body instanceof FormData) {
+      requestOptions.body = body
+      // Remover Content-Type de los headers para FormData
+      if (requestOptions.headers) {
+        const headers = { ...requestOptions.headers }
+        delete (headers as Record<string, string>)['Content-Type']
+        requestOptions.headers = headers
+      }
+    } else if (body) {
+      requestOptions.body = JSON.stringify(body)
+    }
+
+    return this.request<T>(endpoint, requestOptions)
+  }
+
+  async patch<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<ApiResponse<T>> {
+    const requestOptions: RequestInit = {
+      ...options,
+      method: 'PATCH',
     }
 
     // Si el body es FormData, no lo serialices ni pongas Content-Type

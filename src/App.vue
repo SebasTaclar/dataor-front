@@ -2,66 +2,76 @@
   <header :class="['header', { scrolled: isScrolled }]">
     <div class="nav-container">
       <nav class="navbar" aria-label="Principal">
-      <!-- Logo y marca -->
-      <RouterLink class="logo" to="/" @click="closeMobileMenu">
-        <img src="/images/logo2.jpeg" alt="Data.Or Technological Services" class="logo-image-rounded" />
-      </RouterLink>
+        <!-- Logo y marca -->
+        <RouterLink class="logo" to="/" @click="closeMobileMenu">
+          <img src="/images/logo2.jpeg" alt="Data.Or Technological Services" class="logo-image-rounded" />
+        </RouterLink>
 
-      <!-- Navegación principal -->
-      <div class="nav-menu desktop-nav">
-        <RouterLink to="/" class="nav-link">Inicio</RouterLink>
-        <a href="#servicios" class="nav-link">Servicios</a>
-        <a href="#nosotros" class="nav-link">Nosotros</a>
-        <a href="#proyectos" class="nav-link">Proyectos</a>
-        <a href="#hablemos" class="nav-link">Contacto</a>
-      </div>
-
-      <!-- Controles de usuario -->
-      <div class="nav-controls desktop-nav">
-  <a href="#hablemos" class="btn demo-btn"><span class="demo-text">Solicita un<br>demo</span></a>
-        <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder</RouterLink>
-        <RouterLink v-if="isLoggedIn && isAdmin" class="btn admin-btn" to="/admin">⚙️ Panel Admin</RouterLink>
-        <RouterLink v-if="isLoggedIn" @click="logout" class="btn logout-btn" to="/">Cerrar sesión</RouterLink>
-        <div v-if="isLoggedIn" class="user-greeting">
-          <span>{{ username }}</span>
+        <!-- Navegación principal -->
+        <div class="nav-menu desktop-nav">
+          <RouterLink to="/" class="nav-link">Inicio</RouterLink>
+          <a href="#servicios" class="nav-link">Servicios</a>
+          <a href="#nosotros" class="nav-link">Nosotros</a>
+          <a href="#proyectos" class="nav-link">Proyectos</a>
+          <a href="#hablemos" class="nav-link">Contacto</a>
         </div>
-      </div>
 
-  <!-- Menu hamburguesa para mobile -->
-      <button class="hamburger-menu" @click="toggleMobileMenu" :class="{ 'active': isMobileMenuOpen }">
-        <span></span>
-        <span></span>
-        <span></span>
-  </button>
-
-  <!-- Menu mobile desplegable -->
-      <div class="mobile-menu" :class="{ 'active': isMobileMenuOpen }">
-        <div class="mobile-menu-content">
-          <div class="mobile-nav-links">
-            <RouterLink to="/" class="mobile-link" @click="closeMobileMenu">Inicio</RouterLink>
-            <a href="#servicios" class="mobile-link" @click="closeMobileMenu">Servicios</a>
-            <a href="#nosotros" class="mobile-link" @click="closeMobileMenu">Nosotros</a>
-            <a href="#proyectos" class="mobile-link" @click="closeMobileMenu">Proyectos</a>
-            <a href="#contacto" class="mobile-link" @click="closeMobileMenu">Contacto</a>
+        <!-- Controles de usuario -->
+        <div class="nav-controls desktop-nav">
+          <a href="#hablemos" class="btn demo-btn"><span class="demo-text">Solicita un<br>demo</span></a>
+          <RouterLink v-if="!isLoggedIn" class="btn access-btn" to="/login">Acceder</RouterLink>
+          <AdminDropdown v-if="isLoggedIn && isAdmin" />
+          <RouterLink v-if="isLoggedIn" @click="logout" class="btn logout-btn" to="/">Cerrar sesión</RouterLink>
+          <div v-if="isLoggedIn" class="user-greeting">
+            <span>{{ username }}</span>
           </div>
+        </div>
 
-          <div class="mobile-controls">
-            <a href="#hablemos" class="mobile-btn demo-btn" @click="closeMobileMenu"><span class="demo-text">Solicita un<br>demo</span></a>
-            <RouterLink v-if="!isLoggedIn" class="mobile-btn access-btn" to="/login" @click="closeMobileMenu">
-              Acceder
-            </RouterLink>
-            <div v-if="isLoggedIn" class="mobile-user-greeting">
-              <span>Hola, {{ username }}</span>
+        <!-- Menu hamburguesa para mobile -->
+        <button class="hamburger-menu" @click="toggleMobileMenu" :class="{ 'active': isMobileMenuOpen }">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <!-- Menu mobile desplegable -->
+        <div class="mobile-menu" :class="{ 'active': isMobileMenuOpen }">
+          <div class="mobile-menu-content">
+            <div class="mobile-nav-links">
+              <RouterLink to="/" class="mobile-link" @click="closeMobileMenu">Inicio</RouterLink>
+              <a href="#servicios" class="mobile-link" @click="closeMobileMenu">Servicios</a>
+              <a href="#nosotros" class="mobile-link" @click="closeMobileMenu">Nosotros</a>
+              <a href="#proyectos" class="mobile-link" @click="closeMobileMenu">Proyectos</a>
+              <a href="#contacto" class="mobile-link" @click="closeMobileMenu">Contacto</a>
             </div>
-            <RouterLink v-if="isLoggedIn && isAdmin" class="mobile-btn admin-btn" to="/admin" @click="closeMobileMenu">
-              ⚙️ Panel Admin
-            </RouterLink>
-            <RouterLink v-if="isLoggedIn" @click="logout; closeMobileMenu()" class="mobile-btn logout-btn" to="/">
-              Cerrar sesión
-            </RouterLink>
+
+            <div class="mobile-controls">
+              <a href="#hablemos" class="mobile-btn demo-btn" @click="closeMobileMenu"><span class="demo-text">Solicita
+                  un<br>demo</span></a>
+              <RouterLink v-if="!isLoggedIn" class="mobile-btn access-btn" to="/login" @click="closeMobileMenu">
+                Acceder
+              </RouterLink>
+              <div v-if="isLoggedIn" class="mobile-user-greeting">
+                <span>Hola, {{ username }}</span>
+              </div>
+              <!-- Panel Admin links para mobile -->
+              <div v-if="isLoggedIn && isAdmin" class="mobile-admin-links">
+                <RouterLink class="mobile-btn admin-btn" to="/admin" @click="closeMobileMenu">
+                  📊 Proyectos
+                </RouterLink>
+                <RouterLink class="mobile-btn admin-btn" to="/admin/clientes" @click="closeMobileMenu">
+                  👥 Clientes
+                </RouterLink>
+                <RouterLink class="mobile-btn admin-btn" to="/admin/cotizaciones" @click="closeMobileMenu">
+                  📋 Cotizaciones
+                </RouterLink>
+              </div>
+              <RouterLink v-if="isLoggedIn" @click="logout; closeMobileMenu()" class="mobile-btn logout-btn" to="/">
+                Cerrar sesión
+              </RouterLink>
+            </div>
           </div>
         </div>
-      </div>
       </nav>
     </div>
   </header>
@@ -79,13 +89,14 @@ import { authService } from '@/services/api';
 import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue';
 import router from './router';
 import SocialFloating from '@/components/SocialFloating.vue';
+import AdminDropdown from '@/components/AdminDropdown.vue';
 
 const isLoggedIn = ref(false);
 const username = ref('');
 const isMobileMenuOpen = ref(false);
 const isScrolled = ref(false);
-const cursorDot = ref<HTMLDivElement|null>(null);
-let dotRAF:number|undefined
+const cursorDot = ref<HTMLDivElement | null>(null);
+let dotRAF: number | undefined
 let targetX = 0, targetY = 0
 let currentX = 0, currentY = 0
 
@@ -126,17 +137,17 @@ onMounted(() => {
   checkAuthStatus();
   window.addEventListener('scroll', handleScroll, { passive: true });
   handleScroll();
-  const move = (e:MouseEvent)=>{ targetX = e.clientX; targetY = e.clientY }
-  window.addEventListener('mousemove', move, { passive:true })
-  const animate=()=>{ currentX += (targetX - currentX)*0.08; currentY += (targetY - currentY)*0.08; if(cursorDot.value){ cursorDot.value.style.transform = `translate3d(${currentX}px,${currentY}px,0)` } dotRAF = requestAnimationFrame(animate) }
+  const move = (e: MouseEvent) => { targetX = e.clientX; targetY = e.clientY }
+  window.addEventListener('mousemove', move, { passive: true })
+  const animate = () => { currentX += (targetX - currentX) * 0.08; currentY += (targetY - currentY) * 0.08; if (cursorDot.value) { cursorDot.value.style.transform = `translate3d(${currentX}px,${currentY}px,0)` } dotRAF = requestAnimationFrame(animate) }
   dotRAF = requestAnimationFrame(animate)
   // accesibilidad: ocultar si user prefiere movimiento reducido
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches && cursorDot.value){ cursorDot.value.style.display='none' }
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches && cursorDot.value) { cursorDot.value.style.display = 'none' }
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll);
-  if(dotRAF) cancelAnimationFrame(dotRAF)
+  if (dotRAF) cancelAnimationFrame(dotRAF)
 });
 
 const route = useRoute();
@@ -146,8 +157,27 @@ watch(route, () => {
 </script>
 
 <style scoped>
-.cursor-dot { position:fixed; top:0; left:0; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; pointer-events:none; z-index:4000; background:radial-gradient(circle at 30% 30%, rgba(125,240,255,0.4), rgba(50,184,255,0.3) 55%, rgba(0,102,255,0.2) 100%); mix-blend-mode:screen; filter:blur(0.8px) drop-shadow(0 0 4px rgba(70,190,255,.3)); transition:opacity .35s ease; }
-@media (max-width:820px){ .cursor-dot { display:none; } }
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 4000;
+  background: radial-gradient(circle at 30% 30%, rgba(125, 240, 255, 0.4), rgba(50, 184, 255, 0.3) 55%, rgba(0, 102, 255, 0.2) 100%);
+  mix-blend-mode: screen;
+  filter: blur(0.8px) drop-shadow(0 0 4px rgba(70, 190, 255, .3));
+  transition: opacity .35s ease;
+}
+
+@media (max-width:820px) {
+  .cursor-dot {
+    display: none;
+  }
+}
 
 /* Navbar interno (contenedor de elementos) */
 .navbar {
@@ -165,9 +195,11 @@ watch(route, () => {
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 50px;
   margin-left: auto;
-  margin-right: 20px;
+  margin-right: auto;
+  flex: 1;
+  justify-content: center;
 }
 
 .nav-link {
@@ -181,7 +213,19 @@ watch(route, () => {
   transition: color .25s ease, text-shadow .35s ease;
 }
 
-.nav-link::after {content:"";position:absolute;left:50%;bottom:-6px;width:0;height:3px;background:linear-gradient(90deg,#00e4ff 0%,#4fdcff 20%,#60b8ff 45%,#4d8dff 70%,#7f7bff 100%);border-radius:3px;box-shadow:0 0 8px rgba(0,228,255,.65),0 0 18px rgba(127,123,255,.45);transition:width .35s ease,left .35s ease;opacity:.95}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00e4ff 0%, #4fdcff 20%, #60b8ff 45%, #4d8dff 70%, #7f7bff 100%);
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(0, 228, 255, .65), 0 0 18px rgba(127, 123, 255, .45);
+  transition: width .35s ease, left .35s ease;
+  opacity: .95
+}
 
 .nav-link:hover {
   color: #d9e2ec;
@@ -194,7 +238,7 @@ watch(route, () => {
 
 .nav-link.active {
   color: #e6fbff;
-  text-shadow: 0 0 6px rgba(0,228,255,.75), 0 0 14px rgba(127,123,255,.55);
+  text-shadow: 0 0 6px rgba(0, 228, 255, .75), 0 0 14px rgba(127, 123, 255, .55);
 }
 
 
@@ -215,7 +259,8 @@ watch(route, () => {
 .nav-controls {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
+  margin-left: auto;
 }
 
 .btn {
@@ -234,17 +279,17 @@ watch(route, () => {
 
 .demo-btn {
   position: relative;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   color: #f5f9fb;
   border-radius: 46px;
   padding: 12px 28px;
   font-weight: 600;
   font-size: 14px;
-  border: 1px solid rgba(255,255,255,0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   cursor: pointer;
   letter-spacing: .25px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
   transition: background .35s ease, box-shadow .35s ease, transform .28s ease, color .3s ease;
 }
 
@@ -254,26 +299,27 @@ watch(route, () => {
   line-height: 1.1;
 }
 
-.demo-btn::after { /* sutil brillo interior */
+.demo-btn::after {
+  /* sutil brillo interior */
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(140deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 65%);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 65%);
   opacity: .15;
   pointer-events: none;
 }
 
 .demo-btn:hover {
-  background: rgba(255,255,255,0.14);
-  box-shadow: 0 6px 20px -8px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 20px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
   transform: translateY(-3px);
 }
 
 .demo-btn:active {
   transform: translateY(-1px);
-  background: rgba(255,255,255,0.18);
-  box-shadow: 0 3px 12px -4px rgba(0,0,0,0.6);
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 3px 12px -4px rgba(0, 0, 0, 0.6);
 }
 
 .access-btn {
@@ -456,6 +502,12 @@ watch(route, () => {
   backdrop-filter: blur(10px);
 }
 
+.mobile-admin-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0;
+}
 /* Responsive */
 @media (max-width: 768px) {
   .header {

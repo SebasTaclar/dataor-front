@@ -362,9 +362,9 @@ body {
   border-bottom: 1px solid var(--accent-cyan);
 }
 .nav-container {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 3rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -378,6 +378,7 @@ body {
   align-items: center;
   text-decoration: none;
   color: var(--white);
+  flex-shrink: 0;
 }
 
 /* Versión principal con bordes curvos para el header */

@@ -1,12 +1,14 @@
 export type Client = {
-  id: string
+  id: number
   name: string
-  companyName: string
-  companyDocument: string
-  rut: string
-  phoneNumber: string
-  address: string
-  creationDate: string
-  frequentClient: string // Changed from boolean to string to match API
-  photoFileName?: string // Made optional since it's not always returned by API
+  email: string
+  phone: string
+  country: string
+  companyName?: string
+  notes?: string
+  monthlyAmount?: number
+  paymentDayMonth?: number
+  createdAt: string
+  updatedAt: string
+  photoFileName?: string
 }
