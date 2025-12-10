@@ -38,63 +38,19 @@
           </div>
           <form @submit.prevent="saveClient" class="new-project-form">
             <div class="form-grid">
-              <input
-                v-model="clientForm.name"
-                type="text"
-                placeholder="Nombre del contacto"
-                required
-                class="form-input"
-              />
-              <input
-                v-model="clientForm.companyName"
-                type="text"
-                placeholder="Nombre de la empresa"
-                required
-                class="form-input"
-              />
-              <input
-                v-model="clientForm.email"
-                type="email"
-                placeholder="Email"
-                required
-                class="form-input"
-              />
-              <input
-                v-model="clientForm.phone"
-                type="tel"
-                placeholder="Teléfono"
-                required
-                class="form-input"
-              />
-              <input
-                v-model="clientForm.country"
-                type="text"
-                placeholder="País"
-                required
-                class="form-input"
-              />
-              <input
-                v-model="clientForm.monthlyAmount"
-                type="number"
-                step="0.01"
-                placeholder="Monto mensual"
-                class="form-input"
-              />
-              <input
-                v-model="clientForm.paymentDayMonth"
-                type="number"
-                min="1"
-                max="31"
-                placeholder="Día de pago del mes (1-31)"
-                class="form-input"
-              />
-              <textarea
-                v-model="clientForm.notes"
-                placeholder="Notas"
-                class="form-input"
-                rows="3"
-                style="grid-column: 1 / -1;"
-              ></textarea>
+              <input v-model="clientForm.name" type="text" placeholder="Nombre del contacto" required
+                class="form-input" />
+              <input v-model="clientForm.companyName" type="text" placeholder="Nombre de la empresa" required
+                class="form-input" />
+              <input v-model="clientForm.email" type="email" placeholder="Email" required class="form-input" />
+              <input v-model="clientForm.phone" type="tel" placeholder="Teléfono" required class="form-input" />
+              <input v-model="clientForm.country" type="text" placeholder="País" required class="form-input" />
+              <input v-model="clientForm.monthlyAmount" type="number" step="0.01" placeholder="Monto mensual"
+                class="form-input" />
+              <input v-model="clientForm.paymentDayMonth" type="number" min="1" max="31"
+                placeholder="Día de pago del mes (1-31)" class="form-input" />
+              <textarea v-model="clientForm.notes" placeholder="Notas" class="form-input" rows="3"
+                style="grid-column: 1 / -1;"></textarea>
               <div class="form-actions">
                 <button type="submit" class="add-btn">
                   {{ editingClient ? 'Actualizar' : 'Agregar' }}
@@ -109,132 +65,161 @@
 
         <!-- Lista de Clientes -->
         <div class="projects-panels">
-            <div class="panel projects-professional main-projects">
-              <div class="panel-header">
-                <div>
-                  <h4>📋 Lista de Clientes</h4>
-                  <div class="project-counter">{{ clients.length }} clientes registrados</div>
-                </div>
-                <div class="revenue-summary">
-                  <small class="revenue-label">💰 Ingresos Mensuales:</small>
-                  <strong class="revenue-value">${{ calculateMonthlyRevenue().toLocaleString('es-CO', { minimumFractionDigits: 0 }) }}</strong>
-                </div>
+          <div class="panel projects-professional main-projects">
+            <div class="panel-header">
+              <div>
+                <h4>📋 Lista de Clientes</h4>
+                <div class="project-counter">{{ clients.length }} clientes registrados</div>
               </div>
-
-              <div v-if="loading" class="loading-state">
-                <p>Cargando clientes...</p>
+              <div class="revenue-summary">
+                <small class="revenue-label">💰 Ingresos Mensuales:</small>
+                <strong class="revenue-value">${{ calculateMonthlyRevenue().toLocaleString('es-CO', {
+                  minimumFractionDigits: 0 }) }}</strong>
               </div>
+            </div>
 
-              <div v-else class="clients-table-wrapper">
-                <table v-if="clients.length > 0" class="clients-table">
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Empresa</th>
-                      <th>Email</th>
-                      <th>Teléfono</th>
-                      <th>País</th>
-                      <th>Monto Mensual</th>
-                      <th>Día de Pago</th>
-                      <th>Notas</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="client in clients" :key="client.id" class="client-row" :class="{ 'is-editing': inlineEditingId === client.id }">
-                      <td class="td-name">
-                        <template v-if="inlineEditingId === client.id">
-                          <input v-model="inlineEditingData!.name" type="text" class="edit-input" />
-                        </template>
-                        <template v-else>
-                          {{ client.name }}
-                        </template>
-                      </td>
-                      <td>
-                        <template v-if="inlineEditingId === client.id">
-                          <input v-model="inlineEditingData!.companyName" type="text" class="edit-input" />
-                        </template>
-                        <template v-else>
-                          {{ client.companyName }}
-                        </template>
-                      </td>
-                      <td>
-                        <template v-if="inlineEditingId === client.id">
-                          <input v-model="inlineEditingData!.email" type="email" class="edit-input" />
-                        </template>
-                        <template v-else>
-                          {{ client.email }}
-                        </template>
-                      </td>
-                      <td>
-                        <template v-if="inlineEditingId === client.id">
-                          <input v-model="inlineEditingData!.phone" type="tel" class="edit-input" />
-                        </template>
-                        <template v-else>
-                          {{ client.phone }}
-                        </template>
-                      </td>
-                      <td>
-                        <template v-if="inlineEditingId === client.id">
-                          <input v-model="inlineEditingData!.country" type="text" class="edit-input" />
-                        </template>
-                        <template v-else>
-                          {{ client.country }}
-                        </template>
-                      </td>
-                      <td class="td-amount">
-                        <template v-if="inlineEditingId === client.id">
-                          <input v-model.number="inlineEditingData!.monthlyAmount" type="number" step="0.01" class="edit-input" />
-                        </template>
-                        <template v-else>
-                          {{ client.monthlyAmount ? `$${client.monthlyAmount.toLocaleString('es-CO')}` : '-' }}
-                        </template>
-                      </td>
-                      <td class="td-payment-day">
-                        <template v-if="inlineEditingId === client.id">
-                          <input v-model.number="inlineEditingData!.paymentDayMonth" type="number" min="1" max="31" class="edit-input" />
-                        </template>
-                        <template v-else>
-                          {{ client.paymentDayMonth ? `Día ${client.paymentDayMonth}` : '-' }}
-                        </template>
-                      </td>
-                      <td class="td-notes">
-                        <template v-if="inlineEditingId === client.id">
-                          <input v-model="inlineEditingData!.notes" type="text" class="edit-input" />
-                        </template>
-                        <template v-else>
-                          {{ client.notes || '-' }}
-                        </template>
-                      </td>
-                      <td class="td-actions">
-                        <template v-if="inlineEditingId === client.id">
-                          <button @click="saveInlineEditBatch(client.id)" class="action-btn save-btn" title="Guardar">✅</button>
-                          <button @click="cancelInlineEdit" class="action-btn cancel-btn" title="Cancelar">❌</button>
-                        </template>
-                        <template v-else>
-                          <button @click="startInlineEdit(client)" class="action-btn edit-btn" title="Editar inline">✏️</button>
-                          <button @click="confirmDelete(client)" class="action-btn delete-btn" title="Eliminar">🗑️</button>
-                        </template>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+            <div v-if="loading" class="loading-state">
+              <p>Cargando clientes...</p>
+            </div>
 
-                <!-- Mensaje cuando no hay clientes -->
-                <div v-else class="empty-projects">
-                  <div class="empty-icon">📁</div>
-                  <h5>No hay clientes registrados</h5>
-                  <p>Utiliza el formulario de arriba para agregar tu primer cliente</p>
-                </div>
+            <div v-else class="clients-table-wrapper">
+              <table v-if="clients.length > 0" class="clients-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Empresa</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>País</th>
+                    <th>Monto Mensual</th>
+                    <th>Día de Pago</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="client in clients" :key="client.id" class="client-row"
+                    :class="{ 'is-editing': inlineEditingId === client.id }">
+                    <td class="td-name">
+                      <template v-if="inlineEditingId === client.id">
+                        <input v-model="inlineEditingData!.name" type="text" class="edit-input" />
+                      </template>
+                      <template v-else>
+                        {{ client.name }}
+                      </template>
+                    </td>
+                    <td>
+                      <template v-if="inlineEditingId === client.id">
+                        <input v-model="inlineEditingData!.companyName" type="text" class="edit-input" />
+                      </template>
+                      <template v-else>
+                        {{ client.companyName }}
+                      </template>
+                    </td>
+                    <td>
+                      <template v-if="inlineEditingId === client.id">
+                        <input v-model="inlineEditingData!.email" type="email" class="edit-input" />
+                      </template>
+                      <template v-else>
+                        {{ client.email }}
+                      </template>
+                    </td>
+                    <td>
+                      <template v-if="inlineEditingId === client.id">
+                        <input v-model="inlineEditingData!.phone" type="tel" class="edit-input" />
+                      </template>
+                      <template v-else>
+                        {{ client.phone }}
+                      </template>
+                    </td>
+                    <td>
+                      <template v-if="inlineEditingId === client.id">
+                        <input v-model="inlineEditingData!.country" type="text" class="edit-input" />
+                      </template>
+                      <template v-else>
+                        {{ client.country }}
+                      </template>
+                    </td>
+                    <td class="td-amount">
+                      <template v-if="inlineEditingId === client.id">
+                        <input v-model.number="inlineEditingData!.monthlyAmount" type="number" step="0.01"
+                          class="edit-input" />
+                      </template>
+                      <template v-else>
+                        {{ client.monthlyAmount ? `$${client.monthlyAmount.toLocaleString('es-CO')}` : '-' }}
+                      </template>
+                    </td>
+                    <td class="td-payment-day">
+                      <template v-if="inlineEditingId === client.id">
+                        <input v-model.number="inlineEditingData!.paymentDayMonth" type="number" min="1" max="31"
+                          class="edit-input" />
+                      </template>
+                      <template v-else>
+                        {{ client.paymentDayMonth ? `Día ${client.paymentDayMonth}` : '-' }}
+                      </template>
+                    </td>
+                    <td class="td-notes">
+                      <template v-if="inlineEditingId === client.id">
+                        <textarea v-model="inlineEditingData!.notes" class="edit-input edit-textarea"
+                          rows="3"></textarea>
+                      </template>
+                      <template v-else>
+                        <div v-if="client.notes" class="notes-cell" :title="client.notes">
+                          <span class="notes-preview">{{ truncateNotes(client.notes, 50) }}</span>
+                          <button @click="openNotesModal(client)" class="notes-expand-btn"
+                            title="Ver notas completas">📖</button>
+                        </div>
+                        <span v-else class="notes-empty">-</span>
+                      </template>
+                    </td>
+                    <td class="td-actions">
+                      <template v-if="inlineEditingId === client.id">
+                        <button @click="saveInlineEditBatch(client.id)" class="action-btn save-btn"
+                          title="Guardar">✅</button>
+                        <button @click="cancelInlineEdit" class="action-btn cancel-btn" title="Cancelar">❌</button>
+                      </template>
+                      <template v-else>
+                        <button @click="startInlineEdit(client)" class="action-btn edit-btn"
+                          title="Editar inline">✏️</button>
+                        <button @click="confirmDelete(client)" class="action-btn delete-btn"
+                          title="Eliminar">🗑️</button>
+                      </template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Mensaje cuando no hay clientes -->
+              <div v-else class="empty-projects">
+                <div class="empty-icon">📁</div>
+                <h5>No hay clientes registrados</h5>
+                <p>Utiliza el formulario de arriba para agregar tu primer cliente</p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Confirm Modal -->
-    <ConfirmModal ref="confirmModal" />
+  <!-- Confirm Modal -->
+  <ConfirmModal ref="confirmModal" />
+
+  <!-- Notes Modal -->
+  <div v-if="showNotesModal" class="modal-overlay" @click="closeNotesModal">
+    <div class="modal-content notes-modal" @click.stop>
+      <div class="modal-header">
+        <h3>📝 Notas del Cliente: {{ selectedClientForNotes?.name }}</h3>
+        <button class="modal-close" @click="closeNotesModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="notes-full-text">{{ selectedClientForNotes?.notes }}</p>
+      </div>
+      <div class="modal-footer">
+        <button @click="closeNotesModal" class="modal-btn modal-btn-primary">Cerrar</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -256,6 +241,8 @@ const editingClient = ref<Client | null>(null)
 const inlineEditingId = ref<number | null>(null)
 const inlineEditingData = ref<Partial<Client> | null>(null)
 const showForm = ref(false)
+const showNotesModal = ref(false)
+const selectedClientForNotes = ref<Client | null>(null)
 
 const clientForm = ref({
   name: '',
@@ -405,6 +392,21 @@ const calculateMonthlyRevenue = (): number => {
   return clients.value.reduce((total, client) => {
     return total + (Number(client.monthlyAmount) || 0)
   }, 0)
+}
+
+const truncateNotes = (text: string, maxLength: number): string => {
+  if (!text) return '-'
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
+}
+
+const openNotesModal = (client: Client) => {
+  selectedClientForNotes.value = client
+  showNotesModal.value = true
+}
+
+const closeNotesModal = () => {
+  showNotesModal.value = false
+  selectedClientForNotes.value = null
 }
 </script>
 
@@ -1074,4 +1076,162 @@ const calculateMonthlyRevenue = (): number => {
   font-weight: 700;
 }
 
+/* ==================== Estilos para Notas ==================== */
+.td-notes {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 200px;
+}
+
+.notes-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.notes-preview {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.notes-empty {
+  color: #64748b;
+}
+
+.notes-expand-btn {
+  background: rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  color: #60a5fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.notes-expand-btn:hover {
+  background: rgba(102, 126, 234, 0.4);
+  border-color: rgba(102, 126, 234, 0.6);
+  transform: scale(1.05);
+}
+
+/* ==================== Modal Styles ==================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.notes-modal {
+  max-width: 700px;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.modal-body {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.notes-full-text {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(96, 165, 250, 0.2);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.modal-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.modal-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modal-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.edit-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
 </style>
