@@ -49,6 +49,10 @@
                 class="form-input" />
               <input v-model="clientForm.paymentDayMonth" type="number" min="1" max="31"
                 placeholder="Día de pago del mes (1-31)" class="form-input" />
+              <label class="form-toggle">
+                <input v-model="clientForm.isActive" type="checkbox" />
+                <span>Cliente activo</span>
+              </label>
               <textarea v-model="clientForm.notes" placeholder="Notas" class="form-input" rows="3"
                 style="grid-column: 1 / -1;"></textarea>
               <div class="form-actions">
@@ -74,7 +78,8 @@
               <div class="revenue-summary">
                 <small class="revenue-label">💰 Ingresos Mensuales:</small>
                 <strong class="revenue-value">${{ calculateMonthlyRevenue().toLocaleString('es-CO', {
-                  minimumFractionDigits: 0 }) }}</strong>
+                  minimumFractionDigits: 0
+                }) }}</strong>
               </div>
             </div>
 
@@ -91,6 +96,7 @@
                     <th>Email</th>
                     <th>Teléfono</th>
                     <th>País</th>
+                    <th>Estado</th>
                     <th>Monto Mensual</th>
                     <th>Día de Pago</th>
                     <th>Notas</th>
@@ -98,8 +104,8 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="client in clients" :key="client.id" class="client-row"
-                    :class="{ 'is-editing': inlineEditingId === client.id }">
+                  <tr v-for="client in sortedClients" :key="client.id" class="client-row"
+                    :class="{ 'is-editing': inlineEditingId === client.id, 'is-inactive': !client.isActive }">
                     <td class="td-name">
                       <template v-if="inlineEditingId === client.id">
                         <input v-model="inlineEditingData!.name" type="text" class="edit-input" />
@@ -138,6 +144,19 @@
                       </template>
                       <template v-else>
                         {{ client.country }}
+                      </template>
+                    </td>
+                    <td class="td-status">
+                      <template v-if="inlineEditingId === client.id">
+                        <label class="status-toggle">
+                          <input v-model="inlineEditingData!.isActive" type="checkbox" />
+                          <span>{{ inlineEditingData!.isActive ? 'Activo' : 'Inactivo' }}</span>
+                        </label>
+                      </template>
+                      <template v-else>
+                        <span class="status-badge" :class="client.isActive ? 'status-active' : 'status-inactive'">
+                          {{ client.isActive ? 'Activo' : 'Inactivo' }}
+                        </span>
                       </template>
                     </td>
                     <td class="td-amount">
@@ -223,7 +242,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useClients } from '@/composables/useClients'
 import type { Client } from '@/types/ClientType'
@@ -244,6 +263,19 @@ const showForm = ref(false)
 const showNotesModal = ref(false)
 const selectedClientForNotes = ref<Client | null>(null)
 
+const sortedClients = computed(() => {
+  return [...clients.value].sort((firstClient, secondClient) => {
+    const firstInactive = firstClient.isActive === false ? 1 : 0
+    const secondInactive = secondClient.isActive === false ? 1 : 0
+
+    if (firstInactive !== secondInactive) {
+      return firstInactive - secondInactive
+    }
+
+    return firstClient.name.localeCompare(secondClient.name, 'es', { sensitivity: 'base' })
+  })
+})
+
 const clientForm = ref({
   name: '',
   companyName: '',
@@ -252,6 +284,7 @@ const clientForm = ref({
   country: '',
   monthlyAmount: undefined as number | undefined,
   paymentDayMonth: undefined as number | undefined,
+  isActive: true,
   notes: '',
 })
 
@@ -344,6 +377,7 @@ const resetForm = () => {
     country: '',
     monthlyAmount: undefined,
     paymentDayMonth: undefined,
+    isActive: true,
     notes: '',
   }
   editingClient.value = null
@@ -359,6 +393,7 @@ const startInlineEdit = (client: Client) => {
     country: client.country,
     monthlyAmount: client.monthlyAmount,
     paymentDayMonth: client.paymentDayMonth,
+    isActive: client.isActive,
     notes: client.notes,
   }
 }
@@ -390,6 +425,7 @@ const saveInlineEditBatch = async (clientId: number) => {
 
 const calculateMonthlyRevenue = (): number => {
   return clients.value.reduce((total, client) => {
+    if (client.isActive === false) return total
     return total + (Number(client.monthlyAmount) || 0)
   }, 0)
 }
@@ -637,6 +673,56 @@ const closeNotesModal = () => {
   background-clip: text;
   color: transparent;
   font-weight: 700;
+}
+
+.form-toggle,
+.status-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.form-toggle {
+  grid-column: 1 / -1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.form-toggle input,
+.status-toggle input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #60a5fa;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.status-active {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.status-inactive {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+}
+
+.client-row.is-inactive {
+  opacity: 0.72;
 }
 
 .dashboard-content {

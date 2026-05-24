@@ -25,6 +25,7 @@ export interface CreateClientRequest {
   notes?: string
   monthlyAmount?: number
   paymentDayMonth?: number
+  isActive?: boolean
 }
 
 // Interfaz para actualizar un cliente
@@ -37,6 +38,7 @@ export interface UpdateClientRequest {
   notes?: string
   monthlyAmount?: number
   paymentDayMonth?: number
+  isActive?: boolean
 }
 
 // Interfaz para opciones de paginación

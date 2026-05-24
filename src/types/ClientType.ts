@@ -8,6 +8,7 @@ export type Client = {
   notes?: string
   monthlyAmount?: number
   paymentDayMonth?: number
+  isActive: boolean
   createdAt: string
   updatedAt: string
   photoFileName?: string
