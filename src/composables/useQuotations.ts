@@ -19,6 +19,7 @@ export function useQuotations() {
       services: apiQuote.services || [],
       totalAmount: apiQuote.totalAmount || 0,
       billingType: (apiQuote.services?.[0]?.billingType?.toLowerCase() || apiQuote.billingType || 'monthly') as BillingType,
+      currency: apiQuote.currency || 'COP',
       createdAt: apiQuote.createdAt,
       updatedAt: apiQuote.updatedAt,
     }
@@ -34,6 +35,7 @@ export function useQuotations() {
 
     return {
       clientId: data.clientId,
+      currency: data.currency,
       services: data.services.map((s: Record<string, unknown>) => ({
         name: (s.serviceName as string) || (s.name as string) || '',
         description: (s.description as string) || '',
@@ -110,6 +112,7 @@ export function useQuotations() {
       // Mapear datos al formato esperado por la API
       const mappedData = {
         clientId: quotationData.clientId,
+        currency: quotationData.currency,
         services: (quotationData.services || []).map((s: Record<string, unknown>) => ({
           name: (s.serviceName as string) || (s.name as string) || '',
           description: (s.description as string) || '',

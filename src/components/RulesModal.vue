@@ -1,285 +1,268 @@
 <template>
-  <div v-if="isVisible" class="modal-overlay" @click="closeModal">
-    <div class="modal-content" @click.stop>
-      <div class="modal-header">
-        <h3>Reglas de la Dinámica</h3>
-        <button class="close-btn" @click="closeModal">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-          </svg>
-        </button>
-      </div>
+  <Teleport to="body">
+    <div
+      v-if="isVisible"
+      class="rules-overlay"
+      role="presentation"
+      @click.self="emitClose"
+      @keydown.esc.prevent="emitClose"
+      tabindex="-1"
+    >
+      <div class="rules-modal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+        <button class="rules-close" type="button" @click="emitClose" aria-label="Cerrar">×</button>
 
-      <div class="modal-body">
-        <div class="rule-section">
-          <h4>🎯 Participación</h4>
-          <ul>
-            <li>Cada número tiene un costo de $15.000 COP</li>
-            <li>Los números van del 001 al 5000</li>
-            <li>Una vez comprado, el número queda reservado para ti</li>
-          </ul>
+        <header class="rules-header">
+          <span class="rules-badge">INFO</span>
+          <h3 id="rulesTitle" class="rules-title">Cómo trabajamos y qué puedes esperar</h3>
+          <p class="rules-subtitle">
+            Transparencia desde el minuto uno: alcance claro, entregables medibles y avances visibles.
+          </p>
+        </header>
+
+        <div class="rules-body">
+          <div class="rules-section">
+            <h4 class="rules-h">Reglas de juego (para que todo fluya)</h4>
+            <ul class="rules-list">
+              <li><strong>Objetivo + métrica</strong>: definimos qué decisión mejora y cómo se mide.</li>
+              <li><strong>Iteraciones cortas</strong>: entregamos valor por semanas, no por meses.</li>
+              <li><strong>Sin caja negra</strong>: documentamos y transferimos conocimiento.</li>
+              <li><strong>Control de alcance</strong>: cambios sí, sorpresas no (priorizamos con datos).</li>
+            </ul>
+          </div>
+
+          <div class="rules-divider" aria-hidden="true"></div>
+
+          <div class="rules-section">
+            <h4 class="rules-h">Qué traer a la conversación</h4>
+            <ul class="rules-list">
+              <li>Un ejemplo real del problema (reporte, Excel, flujo, pantalla).</li>
+              <li>Fuentes de datos y acceso (ERP/CRM, BD, APIs, archivos).</li>
+              <li>Quién usa el resultado y cada cuánto (operación, dirección, clientes).</li>
+              <li>Cómo se ve el éxito en 30 días (una métrica concreta).</li>
+            </ul>
+          </div>
         </div>
 
-        <div class="rule-section">
-          <h4>📅 Fechas importantes</h4>
-          <ul>
-            <li>Transmisión en vivo por nuestras redes sociales</li>
-          </ul>
-        </div>
-
-        <div class="rule-section">
-          <h4>🏆 Premios</h4>
-          <ul>
-            <li>Motocicleta 200 NS</li>
-          </ul>
-        </div>
-
-        <div class="rule-section">
-          <h4>⚖️ Condiciones generales</h4>
-          <ul>
-            <li>La dinámica se realiza con sistema aleatorio</li>
-            <li>La dinámica se llevará a cabo una vez alcanzado el 50% de los fondos vendidos</li>
-          </ul>
-        </div>
-
-
-      </div>
-
-      <div class="modal-footer">
-        <button class="accept-btn" @click="closeModal">
-          Entendido
-        </button>
+        <footer class="rules-footer">
+          <button class="rules-btn" type="button" @click="emitClose">Entendido</button>
+        </footer>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-interface Props {
-  isVisible: boolean
-}
+import { onMounted, onBeforeUnmount } from 'vue'
 
-interface Emits {
-  (e: 'close'): void
-}
+const props = defineProps<{ isVisible: boolean }>()
+const emit = defineEmits<{ (e: 'close'): void }>()
 
-defineProps<Props>()
-const emit = defineEmits<Emits>()
-
-const closeModal = () => {
+function emitClose() {
   emit('close')
 }
+
+function onKeydown(e: KeyboardEvent) {
+  if (!props.isVisible) return
+  if (e.key === 'Escape') emitClose()
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <style scoped>
-.modal-overlay {
+.rules-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  inset: 0;
+  background: var(--overlay-bg);
+  backdrop-filter: var(--backdrop-blur);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.modal-content {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  border-radius: 20px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow: hidden;
-  border: 1px solid rgba(96, 165, 250, 0.3);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 2rem 2rem 1rem 2rem;
-  border-bottom: 1px solid rgba(96, 165, 250, 0.2);
-}
-
-.modal-header h3 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.close-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.close-btn svg {
-  width: 24px;
-  height: 24px;
-}
-
-.modal-body {
-  padding: 1.5rem 2rem;
-  max-height: 60vh;
+  padding: 6vh 1.2rem;
+  z-index: 10000;
   overflow-y: auto;
 }
 
-.modal-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
-  border-radius: 3px;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-  background: rgba(96, 165, 250, 0.5);
-  border-radius: 3px;
-}
-
-.rule-section {
-  margin-bottom: 2rem;
-}
-
-.rule-section h4 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #60a5fa;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.rule-section ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.rule-section li {
-  color: #cbd5e1;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin-bottom: 0.8rem;
-  padding-left: 1.5rem;
+.rules-modal {
+  width: 100%;
+  max-width: 720px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 24px;
+  backdrop-filter: var(--backdrop-blur);
+  box-shadow: 0 18px 50px -18px var(--shadow-primary);
   position: relative;
+  padding: 1.6rem 1.5rem 1.25rem;
 }
 
-.rule-section li::before {
-  content: "•";
-  color: #60a5fa;
-  font-weight: bold;
+.rules-close {
   position: absolute;
-  left: 0;
-}
-
-.demo-notice {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  top: 10px;
+  right: 12px;
+  border: 1px solid var(--border-secondary);
+  background: transparent;
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
-  padding: 1.5rem;
+  cursor: pointer;
+  font-size: 1.35rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.rules-close:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-primary);
+}
+
+.rules-header {
+  text-align: left;
+  padding-right: 2.2rem;
+  margin-bottom: 1.1rem;
+}
+
+.rules-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  font-weight: 650;
+  padding: 0.45rem 0.8rem 0.42rem;
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.rules-title {
+  margin: 0 0 0.45rem;
+  font-size: 1.2rem;
+  font-weight: 720;
+  letter-spacing: 0.2px;
+  color: var(--text-primary);
+}
+
+.rules-subtitle {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.rules-body {
   display: flex;
+  flex-direction: column;
   gap: 1rem;
-  align-items: flex-start;
-  margin-top: 2rem;
 }
 
-.demo-icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
+.rules-section {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 18px;
+  padding: 1.05rem 1rem;
 }
 
-.demo-text {
-  color: #fca5a5;
+.rules-h {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 650;
+  color: var(--text-secondary);
+}
+
+.rules-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.rules-list li {
   font-size: 0.9rem;
   line-height: 1.5;
+  color: var(--text-primary);
+  opacity: 0.92;
+  position: relative;
+  padding-left: 1rem;
 }
 
-.demo-text strong {
-  color: #ef4444;
+.rules-list li:before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--secondary-blue);
 }
 
-.modal-footer {
-  padding: 1.5rem 2rem 2rem 2rem;
-  border-top: 1px solid rgba(96, 165, 250, 0.2);
+.rules-list strong {
+  font-weight: 700;
+}
+
+.rules-divider {
+  height: 1px;
+  width: 100%;
+  background: var(--border-secondary);
+  opacity: 0.9;
+}
+
+.rules-footer {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  margin-top: 1rem;
 }
 
-.accept-btn {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  color: white;
-  border: none;
-  padding: 0.8rem 2rem;
-  border-radius: 8px;
-  font-weight: 600;
+.rules-btn {
+  border: 1px solid var(--border-primary);
+  background: linear-gradient(125deg, var(--primary-blue), var(--dark-blue));
+  color: #fff;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 650;
+  padding: 0.85rem 1.2rem 0.8rem;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.95rem;
+  transition: filter 0.35s ease;
 }
 
-.accept-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(96, 165, 250, 0.4);
+.rules-btn:hover {
+  filter: brightness(1.08);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .modal-content {
-    margin: 1rem;
-    max-height: 95vh;
+@media (max-width: 640px) {
+  .rules-modal {
+    padding: 1.35rem 1.1rem 1.1rem;
+    border-radius: 20px;
   }
 
-  .modal-header {
-    padding: 1.5rem 1.5rem 1rem 1.5rem;
+  .rules-title {
+    font-size: 1.05rem;
   }
 
-  .modal-header h3 {
-    font-size: 1.5rem;
+  .rules-list li {
+    font-size: 0.86rem;
   }
 
-  .modal-body {
-    padding: 1rem 1.5rem;
-    max-height: 70vh;
+  .rules-footer {
+    justify-content: stretch;
   }
 
-  .modal-footer {
-    padding: 1rem 1.5rem 1.5rem 1.5rem;
-  }
-
-  .rule-section h4 {
-    font-size: 1.1rem;
-  }
-
-  .rule-section li {
-    font-size: 0.9rem;
-  }
-
-  .demo-notice {
-    padding: 1rem;
-  }
-
-  .demo-text {
-    font-size: 0.85rem;
+  .rules-btn {
+    width: 100%;
   }
 }
 </style>

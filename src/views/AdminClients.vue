@@ -50,6 +50,10 @@
               <input v-model="clientForm.paymentDayMonth" type="number" min="1" max="31"
                 placeholder="Día de pago del mes (1-31)" class="form-input" />
               <label class="form-toggle">
+                <input v-model="clientForm.hasPaid" type="checkbox" />
+                <span>{{ clientForm.hasPaid ? 'Pagado' : 'No pagado' }}</span>
+              </label>
+              <label class="form-toggle">
                 <input v-model="clientForm.isActive" type="checkbox" />
                 <span>Cliente activo</span>
               </label>
@@ -97,6 +101,7 @@
                     <th>Teléfono</th>
                     <th>País</th>
                     <th>Estado</th>
+                    <th>Pago</th>
                     <th>Monto Mensual</th>
                     <th>Día de Pago</th>
                     <th>Notas</th>
@@ -156,6 +161,19 @@
                       <template v-else>
                         <span class="status-badge" :class="client.isActive ? 'status-active' : 'status-inactive'">
                           {{ client.isActive ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      </template>
+                    </td>
+                    <td class="td-payment-status">
+                      <template v-if="inlineEditingId === client.id">
+                        <label class="status-toggle">
+                          <input v-model="inlineEditingData!.hasPaid" type="checkbox" />
+                          <span>{{ inlineEditingData!.hasPaid ? 'Pagado' : 'No pagado' }}</span>
+                        </label>
+                      </template>
+                      <template v-else>
+                        <span class="status-badge" :class="client.hasPaid ? 'status-active' : 'status-inactive'">
+                          {{ client.hasPaid ? 'Pagado' : 'No pagado' }}
                         </span>
                       </template>
                     </td>
@@ -284,6 +302,7 @@ const clientForm = ref({
   country: '',
   monthlyAmount: undefined as number | undefined,
   paymentDayMonth: undefined as number | undefined,
+  hasPaid: false,
   isActive: true,
   notes: '',
 })
@@ -377,6 +396,7 @@ const resetForm = () => {
     country: '',
     monthlyAmount: undefined,
     paymentDayMonth: undefined,
+    hasPaid: false,
     isActive: true,
     notes: '',
   }
@@ -393,6 +413,7 @@ const startInlineEdit = (client: Client) => {
     country: client.country,
     monthlyAmount: client.monthlyAmount,
     paymentDayMonth: client.paymentDayMonth,
+    hasPaid: client.hasPaid,
     isActive: client.isActive,
     notes: client.notes,
   }
