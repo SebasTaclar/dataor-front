@@ -25,6 +25,7 @@ export interface CreateClientRequest {
   notes?: string
   monthlyAmount?: number
   paymentDayMonth?: number
+  hasPaid?: boolean
   isActive?: boolean
 }
 
@@ -38,6 +39,7 @@ export interface UpdateClientRequest {
   notes?: string
   monthlyAmount?: number
   paymentDayMonth?: number
+  hasPaid?: boolean
   isActive?: boolean
 }
 

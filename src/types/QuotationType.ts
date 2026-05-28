@@ -1,5 +1,6 @@
 // Tipo de facturación
 export type BillingType = 'monthly' | 'annual' | 'onetime' | 'MONTHLY' | 'ANNUAL' | 'ONETIME'
+export type CurrencyCode = 'COP' | 'USD' | 'EUR' | 'MXN'
 
 // Servicio dentro de una cotización
 export interface QuoteService {
@@ -37,6 +38,7 @@ export interface Quote {
   services: QuoteService[]
   totalAmount?: string | number
   billingType?: BillingType
+  currency?: CurrencyCode
   createdAt?: string
   updatedAt?: string
 }
@@ -45,6 +47,7 @@ export interface Quote {
 export interface CreateQuoteRequest {
   clientId: number
   billingType: BillingType
+  currency?: CurrencyCode
   services: Omit<QuoteService, 'id'>[]
 }
 
@@ -52,6 +55,7 @@ export interface CreateQuoteRequest {
 export interface UpdateQuoteRequest {
   clientId?: number
   billingType?: BillingType
+  currency?: CurrencyCode
   services?: Omit<QuoteService, 'id'>[]
 }
 
@@ -63,4 +67,18 @@ export const BILLING_TYPE_LABELS: Record<string, string> = {
   MONTHLY: 'Mensual',
   ANNUAL: 'Anual',
   ONETIME: 'Pago Único',
+}
+
+export const CURRENCY_LABELS: Record<CurrencyCode, string> = {
+  COP: 'Peso colombiano (COP)',
+  USD: 'Dólar estadounidense (USD)',
+  EUR: 'Euro (EUR)',
+  MXN: 'Peso mexicano (MXN)',
+}
+
+export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
+  COP: '$',
+  USD: 'US$',
+  EUR: '€',
+  MXN: 'MX$',
 }

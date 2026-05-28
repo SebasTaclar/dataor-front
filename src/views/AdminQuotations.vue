@@ -50,6 +50,11 @@
                   {{ label }}
                 </option>
               </select>
+              <select v-model="quotationForm.currency" class="form-select" required>
+                <option v-for="(label, code) in currencyLabels" :key="code" :value="code">
+                  {{ label }}
+                </option>
+              </select>
             </div>
 
             <!-- Servicios de la cotización -->
@@ -70,11 +75,12 @@
                   class="form-input"
                 />
                 <input
-                  v-model.number="service.amount"
-                  type="number"
+                  :value="formatAmountInput(service.amount)"
+                  @input="updateServiceAmount(service, $event)"
+                  type="text"
+                  inputmode="numeric"
                   placeholder="Monto"
                   min="0"
-                  step="0.01"
                   required
                   class="form-input"
                 />
@@ -175,11 +181,12 @@
                                 class="service-input service-desc-input"
                               />
                               <input
-                                v-model.number="service.amount"
-                                type="number"
+                                :value="formatAmountInput(service.amount)"
+                                @input="updateInlineServiceAmount(service, $event)"
+                                type="text"
+                                inputmode="numeric"
                                 placeholder="Monto"
                                 min="0"
-                                step="0.01"
                                 class="service-input service-amount-input"
                               />
                               <input
@@ -212,13 +219,13 @@
                           <div class="services-list">
                             <div v-for="(service, idx) in quotation.services" :key="idx" class="service-item">
                               <span class="service-name">{{ service.name || service.serviceName || 'Sin nombre' }}</span>
-                              <span class="service-value">${{ (service.value || service.amount || 0).toLocaleString() }}</span>
+                              <span class="service-value">{{ formatCurrencyAmount(service.value || service.amount || 0, quotation.currency || quotationForm.currency) }}</span>
                               <span v-if="service.billingType" class="service-billing">{{ service.billingType }}</span>
                             </div>
                           </div>
                         </template>
                       </td>
-                      <td class="td-total"><strong>${{ getServiceTotal(inlineEditingId === quotation.id && inlineEditingData ? inlineEditingData : quotation).toLocaleString('es-CO', { minimumFractionDigits: 0 }) }}</strong></td>
+                      <td class="td-total"><strong>{{ formatCurrencyAmount(getServiceTotal(inlineEditingId === quotation.id && inlineEditingData ? inlineEditingData : quotation), quotation.currency || quotationForm.currency) }}</strong></td>
                       <td class="td-actions">
                         <template v-if="inlineEditingId === quotation.id">
                           <button @click="saveInlineEditBatch(quotation.id)" class="action-btn save-btn" title="Guardar">✅</button>
@@ -262,7 +269,7 @@ import { useClients } from '@/composables/useClients'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import QuotationPdfPreviewModal from '@/components/QuotationPdfPreviewModal.vue'
 import type { Quote, BillingType, QuoteService } from '@/types/QuotationType'
-import { BILLING_TYPE_LABELS } from '@/types/QuotationType'
+import { BILLING_TYPE_LABELS, CURRENCY_LABELS, CURRENCY_SYMBOLS, type CurrencyCode } from '@/types/QuotationType'
 import { authService } from '@/services/api/authService'
 
 const router = useRouter()
@@ -279,9 +286,11 @@ const inlineEditingId = ref<number | null>(null)
 const inlineEditingData = ref<{
   clientName: string
   clientId: number
+  currency: CurrencyCode
   services: Array<{ serviceName: string; description: string; amount: number; billingType?: string }>
 } | null>(null)
 const billingTypeLabels = BILLING_TYPE_LABELS
+const currencyLabels = CURRENCY_LABELS
 const showForm = ref(false)
 
 // Client search
@@ -291,6 +300,7 @@ const showClientDropdown = ref(false)
 const quotationForm = ref({
   clientId: 0,
   billingType: 'monthly' as BillingType,
+  currency: 'COP' as CurrencyCode,
   services: [
     { serviceName: '', description: '', amount: 0 }
   ],
@@ -423,6 +433,7 @@ const resetForm = () => {
   quotationForm.value = {
     clientId: 0,
     billingType: 'monthly' as BillingType,
+    currency: 'COP' as CurrencyCode,
     services: [
       { serviceName: '', description: '', amount: 0 }
     ],
@@ -441,6 +452,7 @@ const startInlineEdit = (quotation: Quote) => {
   inlineEditingData.value = {
     clientName: quotation.clientName || '',
     clientId: quotation.clientId,
+    currency: (quotation.currency || 'COP') as CurrencyCode,
     services: quotation.services?.map(s => ({
       serviceName: s.serviceName || s.name || '',
       description: s.description || '',
@@ -476,6 +488,7 @@ const saveInlineEditBatch = async (quoteId: number) => {
     const updateData = {
       clientName: inlineEditingData.value.clientName,
       clientId: inlineEditingData.value.clientId,
+      currency: inlineEditingData.value.currency,
       services: inlineEditingData.value.services || []
     }
 
@@ -486,6 +499,7 @@ const saveInlineEditBatch = async (quoteId: number) => {
       if (index !== -1) {
         quotations.value[index].clientName = inlineEditingData.value.clientName
         quotations.value[index].clientId = inlineEditingData.value.clientId
+        quotations.value[index].currency = inlineEditingData.value.currency
         quotations.value[index].services = inlineEditingData.value.services.map((s: { serviceName: string; description: string; amount: number; billingType?: string }) => ({
           serviceName: s.serviceName,
           description: s.description,
@@ -510,7 +524,7 @@ const saveInlineEditBatch = async (quoteId: number) => {
   }
 }
 
-const getServiceTotal = (quote: Quote | { clientName?: string; clientId?: number; billingType?: string; services: Array<{ serviceName: string; description: string; amount: number }> }) => {
+const getServiceTotal = (quote: Quote | { clientName?: string; clientId?: number; billingType?: string; currency?: CurrencyCode; services: Array<{ serviceName: string; description: string; amount: number }> }) => {
   // Si la API proporciona totalAmount, úsalo
   if ('totalAmount' in quote && quote.totalAmount) {
     return typeof quote.totalAmount === 'string' ? parseFloat(quote.totalAmount) : quote.totalAmount
@@ -520,6 +534,38 @@ const getServiceTotal = (quote: Quote | { clientName?: string; clientId?: number
     const valor = ('amount' in svc ? svc.amount : ('value' in (svc as Record<string, unknown>) ? (svc as Record<string, unknown>).value : 0)) || 0
     return sum + (typeof valor === 'string' ? parseFloat(valor as string) : (valor as number))
   }, 0)
+}
+
+const formatAmountInput = (value: number | string | undefined): string => {
+  if (value === undefined || value === null || value === '') return ''
+  const numericValue = typeof value === 'string' ? parseFloat(value.replace(/\./g, '').replace(/,/g, '.')) : value
+  if (Number.isNaN(numericValue)) return ''
+  return Math.trunc(numericValue).toLocaleString('es-CO')
+}
+
+const parseAmountInput = (value: string): number => {
+  const numericValue = value.replace(/\./g, '').replace(/,/g, '.').replace(/[^\d.-]/g, '')
+  const parsed = Number(numericValue)
+  return Number.isFinite(parsed) ? Math.trunc(parsed) : 0
+}
+
+const updateServiceAmount = (service: { amount: number }, event: Event) => {
+  const target = event.target as HTMLInputElement
+  service.amount = parseAmountInput(target.value)
+  target.value = formatAmountInput(service.amount)
+}
+
+const updateInlineServiceAmount = (service: { amount: number }, event: Event) => {
+  const target = event.target as HTMLInputElement
+  service.amount = parseAmountInput(target.value)
+  target.value = formatAmountInput(service.amount)
+}
+
+const formatCurrencyAmount = (value: number | string | undefined, currency: CurrencyCode = 'COP'): string => {
+  const numericValue = typeof value === 'string' ? parseFloat(value) : (value || 0)
+  const symbol = CURRENCY_SYMBOLS[currency] || '$'
+  const formattedNumber = Math.trunc(Number.isFinite(numericValue) ? numericValue : 0).toLocaleString('es-CO')
+  return `${symbol} ${formattedNumber}`
 }
 
 const generatePdf = (quotation: Quote) => {
@@ -577,8 +623,8 @@ const generatePdf = (quotation: Quote) => {
 
 .item-row {
   display: grid;
-  grid-template-columns: 2fr 100px 150px 150px auto;
-  gap: 0.75rem;
+  grid-template-columns: minmax(220px, 1.25fr) minmax(340px, 2.2fr) minmax(130px, 0.7fr) auto;
+  gap: 1rem;
   margin-bottom: 0.75rem;
   align-items: center;
 }
@@ -974,8 +1020,8 @@ const generatePdf = (quotation: Quote) => {
 
 .panel-header {
   background: rgba(15, 23, 42, 0.8);
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+  padding: 1.35rem 1.5rem;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.16);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -985,15 +1031,18 @@ const generatePdf = (quotation: Quote) => {
   margin: 0;
   font-size: 1.1rem;
   color: #fff;
+  letter-spacing: 0.2px;
 }
 
 .project-counter {
-  background: rgba(96, 165, 250, 0.1);
-  color: #60a5fa;
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.14), rgba(102, 126, 234, 0.08));
+  color: #bfdbfe;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
   font-weight: 600;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .projects-grid {
@@ -1182,59 +1231,70 @@ const generatePdf = (quotation: Quote) => {
 /* ==================== Estilos para Tabla de Cotizaciones ==================== */
 .quotations-table-wrapper {
   margin-top: 1.5rem;
+  padding: 0.9rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(96, 165, 250, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 16px 30px rgba(2, 6, 23, 0.18);
 }
 
 .quotations-table {
   width: 100%;
   border-collapse: collapse;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.48);
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .quotations-table thead {
-  background: rgba(102, 126, 234, 0.15);
-  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.18), rgba(118, 75, 162, 0.12));
+  border-bottom: 1px solid rgba(102, 126, 234, 0.28);
 }
 
 .quotations-table th {
-  padding: 0.75rem 1rem;
+  padding: 0.95rem 1rem;
   text-align: left;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #e2e8f0;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .quotations-table tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .quotations-table tbody tr:hover {
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(102, 126, 234, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), inset 0 -1px 0 rgba(102, 126, 234, 0.12);
 }
 
 .quotations-table td {
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
+  padding: 1rem;
+  font-size: 0.92rem;
   color: #cbd5e1;
+  vertical-align: top;
 }
 
 .td-id {
   font-weight: 600;
   color: #e2e8f0;
+  white-space: nowrap;
 }
 
 .td-total {
   font-weight: 500;
   color: #4ade80;
+  white-space: nowrap;
 }
 
 .td-client {
   font-weight: 500;
   color: #e2e8f0;
+  max-width: 220px;
 }
 
 .td-billing {
@@ -1248,6 +1308,8 @@ const generatePdf = (quotation: Quote) => {
 .td-actions {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .action-btn {
@@ -1286,7 +1348,7 @@ const generatePdf = (quotation: Quote) => {
 }
 
 .quotation-row.is-editing {
-  background: rgba(102, 126, 234, 0.08);
+  background: rgba(102, 126, 234, 0.12);
 }
 
 .client-select:disabled {
@@ -1297,16 +1359,20 @@ const generatePdf = (quotation: Quote) => {
 .services-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
 .service-item {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(120px, auto) auto;
+  gap: 0.75rem;
   align-items: center;
   font-size: 0.9rem;
-  padding: 0.4rem 0;
-  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(102, 126, 234, 0.16);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(102, 126, 234, 0.04));
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
 }
 
 .service-item:last-child {
@@ -1317,21 +1383,23 @@ const generatePdf = (quotation: Quote) => {
   color: #cbd5e1;
   font-weight: 500;
   flex: 1;
+  min-width: 0;
+  line-height: 1.35;
 }
 
 .service-value {
   color: #22c55e;
   font-weight: 600;
-  margin-left: 0.5rem;
   white-space: nowrap;
+  text-align: right;
 }
 
 .service-billing {
   font-size: 0.75rem;
   color: #a5b4fc;
   background: rgba(102, 126, 234, 0.2);
-  padding: 0.2rem 0.4rem;
-  border-radius: 3px;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
   white-space: nowrap;
 }
 
@@ -1440,25 +1508,26 @@ const generatePdf = (quotation: Quote) => {
 .services-edit-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .service-edit-row {
   display: grid;
-  grid-template-columns: 1.5fr 1.5fr 0.8fr 0.7fr auto;
-  gap: 0.5rem;
+  grid-template-columns: minmax(160px, 1.1fr) minmax(260px, 2.1fr) minmax(120px, 0.75fr) minmax(150px, 0.95fr) auto;
+  gap: 0.75rem;
   align-items: center;
-  padding: 0.5rem;
-  background: rgba(102, 126, 234, 0.05);
-  border-radius: 4px;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(15, 23, 42, 0.16));
+  border-radius: 12px;
   border: 1px solid rgba(102, 126, 234, 0.2);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
 .service-input {
-  padding: 0.4rem;
+  padding: 0.55rem 0.7rem;
   background: rgba(102, 126, 234, 0.15);
   border: 1px solid rgba(102, 126, 234, 0.4);
-  border-radius: 3px;
+  border-radius: 10px;
   color: #e2e8f0;
   font-size: 0.85rem;
   font-family: inherit;
@@ -1477,15 +1546,58 @@ const generatePdf = (quotation: Quote) => {
 
 .service-desc-input {
   min-width: 0;
+  width: 100%;
 }
 
 .service-amount-input {
   min-width: 0;
+  width: 100%;
+  text-align: right;
 }
 
 .service-billing-input {
   min-width: 0;
   font-size: 0.75rem !important;
+}
+
+@media (max-width: 1024px) {
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .quotations-table-wrapper {
+    padding: 0.65rem;
+  }
+
+  .quotations-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .td-client {
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  .service-edit-row {
+    grid-template-columns: 1fr;
+  }
+
+  .service-item {
+    grid-template-columns: 1fr;
+  }
+
+  .quotations-table th,
+  .quotations-table td {
+    padding: 0.75rem 0.8rem;
+  }
+
+  .td-client {
+    max-width: none;
+  }
 }
 
 .remove-service-btn {

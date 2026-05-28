@@ -9,6 +9,37 @@ interface QuotationPdfData {
 export const generateQuotationHtml = (data: QuotationPdfData): string => {
   const { quotation, logoUrl = '/images/logo2.jpeg' } = data
 
+  const currency = quotation.currency || 'COP'
+  const currencySymbolMap: Record<string, string> = {
+    COP: '$',
+    USD: 'US$',
+    EUR: '€',
+    MXN: 'MX$',
+  }
+  const currencySymbol = currencySymbolMap[currency] || '$'
+
+  const formatMoney = (value: number | string | undefined): string => {
+    const numericValue = typeof value === 'string' ? Number(value) : value || 0
+    return `${currencySymbol} ${Math.trunc(Number.isFinite(numericValue) ? numericValue : 0).toLocaleString('es-CO')}`
+  }
+
+  const normalizeText = (value: string | undefined): string => {
+    if (!value) return 'N/A'
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+  }
+
+  const safeClientName = normalizeText(quotation.clientName || quotation.client?.name || 'N/A')
+  const safeCompanyName = normalizeText(quotation.client?.companyName || '')
+  const safeEmail = normalizeText(quotation.client?.email || '')
+  const safePhone = normalizeText(quotation.client?.phone || '')
+  const safeCountry = normalizeText(quotation.client?.country || '')
+  const billingTypeLabel = (quotation.billingType || quotation.services?.[0]?.billingType || 'monthly')
+    .toString()
+    .toUpperCase()
+
   // Formatear fecha
   const createdDate = new Date(quotation.createdAt || new Date())
   const formattedDate = createdDate.toLocaleDateString('es-ES', {
@@ -24,90 +55,149 @@ export const generateQuotationHtml = (data: QuotationPdfData): string => {
     return sum + (amount || value || 0)
   }, 0) || quotation.totalAmount || 0
 
-  // HTML del PDF - Optimizado para una página
+  const serviceRows = (quotation.services || [])
+    .map((service, index) => {
+      const serviceName = normalizeText(service.serviceName || service.name || 'N/A')
+      const description = normalizeText(service.description || 'Sin descripción')
+      const billing = normalizeText(service.billingType || billingTypeLabel)
+      const amount = service.amount || service.value || 0
+
+      return `
+        <tr class="service-row ${index % 2 === 0 ? 'even' : 'odd'}">
+          <td class="service-cell service-name">${serviceName}</td>
+          <td class="service-cell service-description">${description}</td>
+          <td class="service-cell service-billing">${billing}</td>
+          <td class="service-cell service-amount">${formatMoney(amount)}</td>
+        </tr>
+      `
+    })
+    .join('')
+
+  // HTML del PDF - Estructura formal y compacta
   const htmlContent = `
-    <div style="font-family: Arial, sans-serif; color: #333; padding: 0; margin: 0; font-size: 13px; line-height: 1.3;">
-      <!-- Header con onda azul -->
-      <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); position: relative; padding: 20px 15px 12px; margin: 0; clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); margin-bottom: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-          <div style="flex: 1;">
-            <img src="${logoUrl}" alt="DataOR Logo" style="height: 40px; margin-bottom: 3px;">
-            <h1 style="color: white; margin: 0; font-size: 18px; font-weight: bold;">DataOR</h1>
-            <p style="color: rgba(255,255,255,0.7); margin: 1px 0 0; font-size: 9px;">DESARROLLO DE SOFTWARE</p>
+    <div class="quote-page">
+      <style>
+        *{box-sizing:border-box}
+        body{margin:0}
+        .quote-page{font-family: 'Helvetica Neue', Arial, sans-serif; color:#0f172a; background:#fff}
+        /* Header */
+        .top-bar{background:linear-gradient(90deg,#071034 0%,#0b2347 60%); padding:18px 20px; border-radius:10px}
+        .top-inner{display:flex;justify-content:space-between;align-items:center}
+        .brand{display:flex;gap:14px;align-items:center}
+        .brand-logo{width:64px;height:64px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.04);padding:6px}
+        .brand-title{color:#fff;margin:0;font-size:20px;font-weight:800}
+        .brand-sub{color:rgba(255,255,255,0.75);margin:0;font-size:10px}
+        .meta{color:#cfe3ff;text-align:right}
+        .meta .date{font-weight:700;font-size:12px}
+        .meta .num{font-size:11px;opacity:0.85}
+        /* Big title + client card */
+        .hero{display:flex;justify-content:space-between;align-items:flex-start;margin:18px 0}
+        .proposal-title{font-size:34px;line-height:1;margin:0;color:#0f172a}
+        .proposal-accent{color:#1f6feb}
+        .client-card{background:#fff;border-radius:12px;padding:12px 14px;border:1px solid #e6eefc;box-shadow:0 6px 18px rgba(13,60,120,0.06);width:260px}
+        .client-card h4{margin:0;font-size:13px;color:#0f172a}
+        .client-card p{margin:6px 0 0;color:#475569;font-size:11px}
+        /* Services table */
+        .services-wrap{margin-top:8px;border-radius:12px;overflow:hidden;border:1px solid #e6eefc}
+        .services-header{background:#081235;color:#fff;padding:10px 14px;font-weight:700}
+        .services-table{width:100%;border-collapse:collapse}
+        .services-table th{padding:12px 14px;text-align:left;background:#081235;color:#fff;font-size:10px}
+        .services-table th.center{text-align:center}
+        .services-table th.right{text-align:right}
+        .services-table td{padding:12px 14px;border-bottom:1px solid #f1f5fb;font-size:11px;color:#0f172a;vertical-align:top}
+        .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:9px;font-weight:700}
+        .badge.pill{background:#e6f0ff;color:#1353c7;border:1px solid rgba(19,83,199,0.08)}
+        .badge.month{background:#e8fff1;color:#0b6b3a;border:1px solid rgba(11,107,58,0.06)}
+        .service-row.even{background:#fbfdff}
+        /* Total card and notes */
+        .notes-total{display:flex;gap:14px;margin-top:14px}
+        .notes{flex:1;background:#f8fafc;padding:12px;border-radius:12px;border:1px solid #e6eefc}
+        .notes h5{margin:0 0 8px;font-size:11px;color:#0f172a}
+        .total-card{width:320px;background:#fff;border-radius:12px;padding:14px;border-left:6px solid #1f6feb;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;box-shadow:0 8px 22px rgba(15,37,78,0.06)}
+        .total-label{font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase}
+        .total-amount{margin-top:8px;font-size:28px;color:#0f172a;font-weight:900}
+        .total-sub{font-size:10px;color:#64748b;margin-top:6px}
+        /* Footer */
+        .pdf-footer{margin-top:18px;padding-top:12px;border-top:1px solid #f1f5fb;display:flex;justify-content:space-between;align-items:center}
+        .contact{font-size:10px;color:#475569}
+        .brand-small{font-size:11px;color:#0f172a;font-weight:700}
+      </style>
+
+      <div class="top-bar">
+        <div class="top-inner">
+          <div class="brand">
+            <img src="${logoUrl}" class="brand-logo" alt="logo">
+            <div>
+              <p class="brand-title">DataOR</p>
+              <p class="brand-sub">Desarrollo de Software</p>
+            </div>
           </div>
-          <div style="text-align: right; color: white; white-space: nowrap;">
-            <p style="margin: 0 0 2px 0; font-size: 11px; font-weight: bold;">${formattedDate}</p>
-            <p style="margin: 0; font-size: 10px; opacity: 0.8;">Cotización #${quotation.id}</p>
+          <div class="meta">
+            <div class="date">${formattedDate}</div>
+            <div class="num">Cotización #${quotation.id}</div>
           </div>
         </div>
       </div>
 
-      <!-- Cliente info -->
-      <div style="margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb;">
-        <p style="margin: 0; color: #666; font-size: 10px;">CLIENTE:</p>
-        <p style="margin: 2px 0 0; color: #0f172a; font-size: 12px; font-weight: bold;">${quotation.clientName || 'N/A'}</p>
-      </div>
-
-      <!-- Tabla de servicios -->
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;">
-        <thead>
-          <tr style="background-color: #0f172a; color: white;">
-            <th style="padding: 6px 5px; text-align: left; font-size: 10px; font-weight: bold;">SERVICIO</th>
-            <th style="padding: 6px 5px; text-align: left; font-size: 10px; font-weight: bold;">DESCRIPCIÓN</th>
-            <th style="padding: 6px 5px; text-align: center; font-size: 10px; font-weight: bold;">FACTURACIÓN</th>
-            <th style="padding: 6px 5px; text-align: right; font-size: 10px; font-weight: bold;">VALOR</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${quotation.services
-            ?.map(
-              (service, index) => `
-            <tr style="border-bottom: 1px solid #e5e7eb; ${index % 2 === 0 ? 'background-color: #fafbfc;' : ''}">
-              <td style="padding: 5px; font-size: 11px; color: #0f172a; font-weight: 500;">${service.serviceName || service.name || 'N/A'}</td>
-              <td style="padding: 5px; font-size: 10px; color: #555;">${service.description || 'N/A'}</td>
-              <td style="padding: 5px; font-size: 10px; color: #666; text-align: center; text-transform: uppercase;">${service.billingType || 'N/A'}</td>
-              <td style="padding: 5px; font-size: 11px; color: #0f172a; font-weight: 600; text-align: right;">$${((service.amount || service.value || 0) as number).toLocaleString('es-ES')}</td>
-            </tr>
-          `
-            )
-            .join('')}
-        </tbody>
-      </table>
-
-      <!-- Notas - Reducido -->
-      <div style="background-color: #f0f4f8; padding: 8px; border-left: 3px solid #667eea; margin-bottom: 10px; border-radius: 2px; font-size: 10px;">
-        <p style="margin: 0 0 4px 0; color: #0f172a; font-weight: bold; font-size: 10px;">NOTAS:</p>
-        <ul style="margin: 0; padding-left: 14px; color: #555; line-height: 1.3;">
-          <li style="margin-bottom: 2px; font-size: 10px;">Tras aprobar el contenido, coordinaremos con ustedes si realizamos nosotros la publicación o les entregamos el material.</li>
-          <li style="margin-bottom: 2px; font-size: 10px;">Buscamos fortalecer la credibilidad digital mediante contenido estratégico. Es un trabajo conjunto para construir una presencia sólida.</li>
-          <li style="font-size: 10px;">Válida por 15 días. La fecha de ejecución se coordinará según disponibilidad.</li>
-        </ul>
-      </div>
-
-      <!-- Total - Más formal y compacto -->
-      <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-        <div style="background-color: #f3f4f6; border: 2px solid #0f172a; padding: 6px 12px; border-radius: 4px; text-align: center;">
-          <p style="margin: 0; font-size: 9px; color: #666; font-weight: 600;">TOTAL COTIZACIÓN</p>
-          <p style="margin: 3px 0 0; font-size: 16px; font-weight: bold; color: #0f172a;">$${total.toLocaleString('es-ES')}</p>
-        </div>
-      </div>
-
-      <!-- Footer - Compacto -->
-      <div style="border-top: 1px solid #e5e7eb; padding-top: 6px; font-size: 10px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px;">
+      <div style="padding:12px 0 0 0">
+        <div class="hero" style="padding:0 12px">
           <div>
-            <p style="margin: 0 0 3px 0; color: #0f172a; font-weight: bold; font-size: 10px;">CONTACTO</p>
-            <p style="margin: 1px 0; font-size: 9px; color: #555;">dataor52@gmail.com</p>
-            <p style="margin: 1px 0; font-size: 9px; color: #555;">www.dataor.org</p>
+            <h2 class="proposal-title">PROPUESTA <span class="proposal-accent">COMERCIAL</span></h2>
+            <p style="margin:8px 0 0;color:#64748b;font-size:12px;max-width:560px">Soluciones digitales y desarrollo de software a la medida de tu negocio.</p>
           </div>
-          <div>
-            <p style="margin: 0 0 3px 0; color: #0f172a; font-weight: bold; font-size: 10px;">TELÉFONOS</p>
-            <p style="margin: 1px 0; font-size: 9px; color: #555;">+57 310 769 5856</p>
-            <p style="margin: 1px 0; font-size: 9px; color: #555;">+57 310 360 8519</p>
+          <div class="client-card">
+            <p style="margin:0;font-size:10px;color:#64748b">CLIENTE</p>
+            <h4>${safeClientName}</h4>
+            ${safeCompanyName ? `<p style="margin:6px 0 0;color:#475569;font-size:11px">${safeCompanyName}</p>` : ''}
           </div>
         </div>
-        <div style="text-align: center; padding-top: 4px; border-top: 1px solid #e5e7eb;">
-          <p style="margin: 0; font-size: 8px; color: #999;">DataOR © 2024 | Desarrollo de Software</p>
+
+        <div style="padding:0 12px">
+          <div class="services-wrap">
+            <div class="services-header">Servicios y valoración</div>
+            <table class="services-table">
+              <thead>
+                <tr>
+                  <th>Servicio</th>
+                  <th>Descripción</th>
+                  <th class="center">Modalidad</th>
+                  <th class="right">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${serviceRows || `<tr><td colspan="4" style="padding:16px;text-align:center;color:#64748b">No hay servicios</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="padding:0 12px">
+          <div class="notes-total">
+            <div class="notes">
+              <h5>Notas importantes</h5>
+              <ul style="margin:8px 0 0;padding-left:16px;color:#475569;font-size:11px">
+                <li>Tras aprobar el contenido, coordinaremos la entrega o publicación según acordado.</li>
+                <li>Precios en ${currency}, impuestos incluidos (si aplica).</li>
+                <li>Válida por 15 días desde la fecha de emisión.</li>
+              </ul>
+            </div>
+            <div class="total-card">
+              <div class="total-label">Total</div>
+              <div class="total-amount">${formatMoney(total)}</div>
+              <div class="total-sub">Precios en ${currency} · Impuestos incluidos</div>
+            </div>
+          </div>
+
+          <div class="pdf-footer">
+            <div class="contact">
+              <div class="brand-small">DataOR · Desarrollo de Software</div>
+              <div style="margin-top:6px">dataor52@gmail.com · www.dataor.org</div>
+            </div>
+            <div style="text-align:right;color:#64748b;font-size:10px">
+              <div>Tel: +57 310 769 5856</div>
+              <div>WhatsApp: +57 310 769 5856</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

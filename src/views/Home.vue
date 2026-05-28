@@ -55,19 +55,6 @@ const closeRulesModal = () => {
   showRulesModal.value = false
 }
 
-// Form data
-const form = ref({
-  name: '',
-  email: '',
-  company: '',
-  message: ''
-})
-
-const submitForm = () => {
-  // TODO: Implement form submission
-  console.log('Form submitted:', form.value)
-}
-
 // Impact metrics movidos o eliminados (no usados actualmente)
 
 // Services data moved to ServicesSection component
@@ -75,14 +62,6 @@ const submitForm = () => {
 // (Expertise y techStack movidos al componente AboutSection)
 
 // Projects moved to FeaturedProjectsSection component
-
-// Contact benefits
-const contactBenefits = ref([
-  '✅ Consultoría inicial gratuita de 60 minutos con nuestros expertos',
-  '🎯 Análisis personalizado de tu caso de uso y oportunidades de mejora',
-  '📋 Propuesta técnica y comercial detallada con ROI estimado',
-  '🚀 Roadmap de implementación por fases con timeline claro'
-])
 
 // Intersection Observer para animaciones
 onMounted(() => {

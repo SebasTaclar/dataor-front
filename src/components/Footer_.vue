@@ -44,7 +44,7 @@
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; 2025 DATA_OR. Todos los derechos reservados.</p>
+        <p>&copy; 2026 DATA_OR. Todos los derechos reservados.</p>
       </div>
     </div>
   </footer>
