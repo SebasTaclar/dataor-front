@@ -95,23 +95,23 @@
               <table v-if="clients.length > 0" class="clients-table">
                 <thead>
                   <tr>
-                    <th>Nombre</th>
-                    <th>Empresa</th>
-                    <th>Email</th>
-                    <th>Teléfono</th>
-                    <th>País</th>
-                    <th>Estado</th>
-                    <th>Pago</th>
-                    <th>Monto Mensual</th>
-                    <th>Día de Pago</th>
-                    <th>Notas</th>
-                    <th>Acciones</th>
+                    <th style="width: 13%">Nombre</th>
+                    <th style="width: 10%">Empresa</th>
+                    <th style="width: 16%">Email</th>
+                    <th style="width: 9%">Teléfono</th>
+                    <th style="width: 7%">País</th>
+                    <th style="width: 7%">Estado</th>
+                    <th style="width: 7%">Pago</th>
+                    <th style="width: 9%">Monto Mensual</th>
+                    <th style="width: 7%">Día de Pago</th>
+                    <th style="width: 8%">Notas</th>
+                    <th style="width: 7%">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="client in sortedClients" :key="client.id" class="client-row"
                     :class="{ 'is-editing': inlineEditingId === client.id, 'is-inactive': !client.isActive }">
-                    <td class="td-name">
+                    <td class="td-name" :title="client.name">
                       <template v-if="inlineEditingId === client.id">
                         <input v-model="inlineEditingData!.name" type="text" class="edit-input" />
                       </template>
@@ -119,7 +119,7 @@
                         {{ client.name }}
                       </template>
                     </td>
-                    <td>
+                    <td class="td-company" :title="client.companyName">
                       <template v-if="inlineEditingId === client.id">
                         <input v-model="inlineEditingData!.companyName" type="text" class="edit-input" />
                       </template>
@@ -127,7 +127,7 @@
                         {{ client.companyName }}
                       </template>
                     </td>
-                    <td>
+                    <td class="td-email" :title="client.email">
                       <template v-if="inlineEditingId === client.id">
                         <input v-model="inlineEditingData!.email" type="email" class="edit-input" />
                       </template>
@@ -197,8 +197,9 @@
                     </td>
                     <td class="td-notes">
                       <template v-if="inlineEditingId === client.id">
-                        <textarea v-model="inlineEditingData!.notes" class="edit-input edit-textarea"
-                          rows="3"></textarea>
+                        <button @click="openEditNotesModal(client)" class="notes-edit-btn" title="Editar notas">
+                          ✏️ {{ inlineEditingData!.notes ? 'Editar notas' : 'Agregar notas' }}
+                        </button>
                       </template>
                       <template v-else>
                         <div v-if="client.notes" class="notes-cell" :title="client.notes">
@@ -257,6 +258,24 @@
       </div>
     </div>
   </div>
+
+  <!-- Edit Notes Modal -->
+  <div v-if="showEditNotesModal" class="modal-overlay" @click="closeEditNotesModal">
+    <div class="modal-content notes-modal" @click.stop>
+      <div class="modal-header">
+        <h3>✏️ Editar Notas: {{ editingNotesClient?.name }}</h3>
+        <button class="modal-close" @click="closeEditNotesModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <textarea v-model="editingNotesText" class="edit-notes-textarea" rows="8"
+          placeholder="Escribe las notas del cliente..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button @click="closeEditNotesModal" class="modal-btn modal-btn-secondary">Cancelar</button>
+        <button @click="saveEditNotes" class="modal-btn modal-btn-primary">Guardar</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -280,6 +299,9 @@ const inlineEditingData = ref<Partial<Client> | null>(null)
 const showForm = ref(false)
 const showNotesModal = ref(false)
 const selectedClientForNotes = ref<Client | null>(null)
+const showEditNotesModal = ref(false)
+const editingNotesClient = ref<Client | null>(null)
+const editingNotesText = ref('')
 
 const sortedClients = computed(() => {
   return [...clients.value].sort((firstClient, secondClient) => {
@@ -464,6 +486,25 @@ const openNotesModal = (client: Client) => {
 const closeNotesModal = () => {
   showNotesModal.value = false
   selectedClientForNotes.value = null
+}
+
+const openEditNotesModal = (client: Client) => {
+  editingNotesClient.value = client
+  editingNotesText.value = inlineEditingData.value?.notes ?? client.notes ?? ''
+  showEditNotesModal.value = true
+}
+
+const closeEditNotesModal = () => {
+  showEditNotesModal.value = false
+  editingNotesClient.value = null
+  editingNotesText.value = ''
+}
+
+const saveEditNotes = () => {
+  if (inlineEditingData.value) {
+    inlineEditingData.value.notes = editingNotesText.value
+  }
+  closeEditNotesModal()
 }
 </script>
 
@@ -676,9 +717,9 @@ const closeNotesModal = () => {
 }
 
 .dashboard-container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 2rem;
   padding-top: 6rem;
 }
 
@@ -838,6 +879,7 @@ const closeNotesModal = () => {
   transition: all 0.3s ease;
   flex: 1;
   min-width: 300px;
+  width: 100%;
 }
 
 .panel-header {
@@ -1041,6 +1083,7 @@ const closeNotesModal = () => {
 /* ==================== Estilos para Tabla de Clientes ==================== */
 .clients-table-wrapper {
   margin-top: 1.5rem;
+  overflow-x: auto;
 }
 
 .clients-table {
@@ -1050,6 +1093,7 @@ const closeNotesModal = () => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  table-layout: fixed;
 }
 
 .clients-table thead {
@@ -1084,6 +1128,24 @@ const closeNotesModal = () => {
 .td-name {
   font-weight: 600;
   color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+.td-company {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+.td-email {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .td-amount {
@@ -1095,15 +1157,6 @@ const closeNotesModal = () => {
   font-weight: 500;
   color: #60a5fa;
   text-align: center;
-}
-
-.td-notes {
-  font-size: 0.85rem;
-  color: #94a3b8;
-  max-width: 150px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .td-actions {
@@ -1187,7 +1240,6 @@ const closeNotesModal = () => {
 .td-notes {
   font-size: 0.85rem;
   color: #94a3b8;
-  max-width: 200px;
 }
 
 .notes-cell {
@@ -1340,5 +1392,60 @@ const closeNotesModal = () => {
 .edit-textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+.edit-notes-textarea {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 150px;
+  transition: all 0.3s ease;
+}
+
+.edit-notes-textarea:focus {
+  outline: none;
+  border-color: rgba(96, 165, 250, 0.6);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.edit-notes-textarea::placeholder {
+  color: #94a3b8;
+}
+
+.notes-edit-btn {
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  color: #a5b4fc;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.notes-edit-btn:hover {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.5);
+  color: #c7d2fe;
+}
+
+.modal-btn-secondary {
+  background: rgba(100, 116, 139, 0.3);
+  color: #cbd5e1;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.modal-btn-secondary:hover {
+  background: rgba(100, 116, 139, 0.5);
+  transform: translateY(-1px);
 }
 </style>
