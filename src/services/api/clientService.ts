@@ -73,10 +73,10 @@ class ClientService {
   }
 
   /**
-   * Crea un nuevo cliente
+   * Crea un nuevo cliente (multipart: campos + archivos)
    */
-  async createClient(clientData: CreateClientRequest): Promise<ApiResponse<Client>> {
-    return await apiClient.post<Client>('/clients', clientData)
+  async createClient(formData: FormData): Promise<ApiResponse<Client>> {
+    return await apiClient.post<Client>('/clients', formData)
   }
 
   /**
@@ -114,6 +114,22 @@ class ClientService {
    */
   async deleteClientPhoto(clientId: number): Promise<ApiResponse<null>> {
     return await apiClient.delete<null>(`/clients/${clientId}/photo`)
+  }
+
+  /**
+   * Agrega archivos a un cliente existente
+   */
+  async addClientFiles(clientId: number, files: File[]): Promise<ApiResponse<Client>> {
+    const formData = new FormData()
+    files.forEach((file) => formData.append('files', file))
+    return await apiClient.post<Client>(`/files/clients/${clientId}`, formData)
+  }
+
+  /**
+   * Elimina un archivo de un cliente
+   */
+  async deleteClientFile(clientId: number, fileKey: string): Promise<ApiResponse<Client>> {
+    return await apiClient.delete<Client>(`/files/clients/${clientId}/${fileKey}`)
   }
 }
 

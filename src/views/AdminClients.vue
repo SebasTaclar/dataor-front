@@ -59,6 +59,22 @@
               </label>
               <textarea v-model="clientForm.notes" placeholder="Notas" class="form-input" rows="3"
                 style="grid-column: 1 / -1;"></textarea>
+              <div class="form-files-section" style="grid-column: 1 / -1;">
+                <label class="form-files-label">
+                  📎 Archivos (opcional)
+                </label>
+                <input ref="fileInputRef" type="file" multiple class="form-files-input"
+                  @change="handleFilesSelect" />
+                <button type="button" class="form-files-btn" @click="fileInputRef?.click()">
+                  Seleccionar archivos
+                </button>
+                <div v-if="pendingFiles.length > 0" class="pending-files-list">
+                  <div v-for="(file, index) in pendingFiles" :key="index" class="pending-file-item">
+                    <span class="pending-file-name">📄 {{ file.name }}</span>
+                    <button type="button" class="pending-file-remove" @click="removePendingFile(index)">✕</button>
+                  </div>
+                </div>
+              </div>
               <div class="form-actions">
                 <button type="submit" class="add-btn">
                   {{ editingClient ? 'Actualizar' : 'Agregar' }}
@@ -95,17 +111,17 @@
               <table v-if="clients.length > 0" class="clients-table">
                 <thead>
                   <tr>
-                    <th style="width: 13%">Nombre</th>
-                    <th style="width: 10%">Empresa</th>
-                    <th style="width: 16%">Email</th>
-                    <th style="width: 9%">Teléfono</th>
-                    <th style="width: 7%">País</th>
-                    <th style="width: 7%">Estado</th>
-                    <th style="width: 7%">Pago</th>
-                    <th style="width: 9%">Monto Mensual</th>
-                    <th style="width: 7%">Día de Pago</th>
-                    <th style="width: 8%">Notas</th>
-                    <th style="width: 7%">Acciones</th>
+                    <th style="width: 12%">Nombre</th>
+                    <th style="width: 9%">Empresa</th>
+                    <th style="width: 14%">Email</th>
+                    <th style="width: 8%">Teléfono</th>
+                    <th style="width: 6%">País</th>
+                    <th style="width: 6%">Estado</th>
+                    <th style="width: 6%">Pago</th>
+                    <th style="width: 8%">Monto Mensual</th>
+                    <th style="width: 6%">Día de Pago</th>
+                    <th style="width: 7%">Notas</th>
+                    <th style="width: 8%">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -217,6 +233,8 @@
                         <button @click="cancelInlineEdit" class="action-btn cancel-btn" title="Cancelar">❌</button>
                       </template>
                       <template v-else>
+                        <button @click="openFilesModal(client)"
+                          class="action-btn files-btn" :class="{ 'has-files': client.files && client.files.length > 0 }" title="Archivos">📎</button>
                         <button @click="startInlineEdit(client)" class="action-btn edit-btn"
                           title="Editar inline">✏️</button>
                         <button @click="confirmDelete(client)" class="action-btn delete-btn"
@@ -276,18 +294,101 @@
       </div>
     </div>
   </div>
+
+  <!-- Files Modal -->
+  <div v-if="showFilesModal" class="modal-overlay" @click="closeFilesModal">
+    <div class="modal-content files-modal" @click.stop>
+      <div class="modal-header">
+        <h3>📁 Archivos de: {{ selectedClientForFiles?.name }}</h3>
+        <button class="modal-close" @click="closeFilesModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div v-if="selectedClientForFiles?.files && selectedClientForFiles.files.length > 0" class="files-list">
+          <div v-for="file in selectedClientForFiles.files" :key="file.key" class="file-item">
+            <span class="file-icon">{{ file.type?.startsWith('image/') ? '🖼️' : '📄' }}</span>
+            <span class="file-name" :title="file.name">{{ file.name }}</span>
+            <div class="file-actions">
+              <button @click="previewFile(file)" class="file-action-btn preview-btn"
+                title="Ver archivo">👁️</button>
+              <button @click="openFileExternal(file.url)" class="file-action-btn open-btn"
+                title="Abrir en nueva pestaña">🔗</button>
+              <button @click="downloadFile(file.url)" class="file-action-btn download-btn"
+                title="Descargar">⬇️</button>
+              <button @click="confirmDeleteFile(selectedClientForFiles!.id, file.key)"
+                class="file-action-btn delete-btn" title="Eliminar">🗑️</button>
+            </div>
+          </div>
+        </div>
+        <div v-else class="no-files-message">
+          <p>No hay archivos adjuntos</p>
+        </div>
+
+        <div class="add-files-section">
+          <input ref="modalFileInputRef" type="file" multiple class="form-files-input"
+            @change="handleModalFilesSelect" />
+          <button type="button" class="form-files-btn" @click="modalFileInputRef?.click()">
+            + Agregar archivos
+          </button>
+          <div v-if="modalPendingFiles.length > 0" class="pending-files-list">
+            <div v-for="(file, index) in modalPendingFiles" :key="index" class="pending-file-item">
+              <span class="pending-file-name">📄 {{ file.name }}</span>
+              <button type="button" class="pending-file-remove" @click="removeModalPendingFile(index)">✕</button>
+            </div>
+            <button @click="uploadFilesToClient(selectedClientForFiles!.id)" class="modal-btn modal-btn-primary"
+              :disabled="uploadingFiles">
+              {{ uploadingFiles ? 'Subiendo...' : 'Subir archivos' }}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button @click="closeFilesModal" class="modal-btn modal-btn-primary">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- File Preview Modal -->
+  <div v-if="showPreviewModal" class="modal-overlay" @click="closePreviewModal">
+    <div class="modal-content preview-modal" @click.stop>
+      <div class="modal-header">
+        <h3>👁️ {{ previewFileData?.name }}</h3>
+        <button class="modal-close" @click="closePreviewModal">✕</button>
+      </div>
+      <div class="modal-body preview-body">
+        <img v-if="previewFileData?.type?.startsWith('image/')" :src="previewFileData.url"
+          :alt="previewFileData.name" class="preview-image" />
+        <iframe v-else-if="previewFileData?.type === 'application/pdf'" :src="previewFileData.url"
+          class="preview-pdf" frameborder="0"></iframe>
+        <div v-else class="preview-not-supported">
+          <p>Vista previa no disponible para este tipo de archivo.</p>
+          <button @click="openFileExternal(previewFileData!.url)" class="modal-btn modal-btn-primary">
+            Abrir en nueva pestaña
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button @click="openFileExternal(previewFileData!.url)" class="modal-btn modal-btn-secondary">
+          Abrir en pestaña
+        </button>
+        <button @click="downloadFile(previewFileData!.url)" class="modal-btn modal-btn-secondary">
+          Descargar
+        </button>
+        <button @click="closePreviewModal" class="modal-btn modal-btn-primary">Cerrar</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useClients } from '@/composables/useClients'
-import type { Client } from '@/types/ClientType'
+import type { Client, StoredFile } from '@/types/ClientType'
 import { authService } from '@/services/api/authService'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 
 const router = useRouter()
-const { clients, loading, loadClients, createClient, updateClient, deleteClient } = useClients()
+const { clients, loading, loadClients, createClient, updateClient, deleteClient, addClientFiles, deleteClientFile } = useClients()
 
 const confirmModal = ref<InstanceType<typeof ConfirmModal>>()
 
@@ -302,6 +403,17 @@ const selectedClientForNotes = ref<Client | null>(null)
 const showEditNotesModal = ref(false)
 const editingNotesClient = ref<Client | null>(null)
 const editingNotesText = ref('')
+
+const pendingFiles = ref<File[]>([])
+const showFilesModal = ref(false)
+const selectedClientForFiles = ref<Client | null>(null)
+const uploadingFiles = ref(false)
+const modalPendingFiles = ref<File[]>([])
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const modalFileInputRef = ref<HTMLInputElement | null>(null)
+
+const showPreviewModal = ref(false)
+const previewFileData = ref<StoredFile | null>(null)
 
 const sortedClients = computed(() => {
   return [...clients.value].sort((firstClient, secondClient) => {
@@ -354,17 +466,45 @@ const toggleFormVisibility = () => {
 const saveClient = async () => {
   try {
     if (editingClient.value) {
-      // Actualizar cliente existente
+      // Actualizar cliente existente (JSON)
       const result = await updateClient(editingClient.value.id, clientForm.value)
       if (result.success) {
+        // Si hay archivos pendientes, subirlos por separado
+        if (pendingFiles.value.length > 0) {
+          const uploadResult = await addClientFiles(editingClient.value.id, pendingFiles.value)
+          if (!uploadResult.success) {
+            error.value = uploadResult.message
+          }
+        }
         successMessage.value = 'Cliente actualizado exitosamente'
         resetForm()
       } else {
         error.value = result.message
       }
     } else {
-      // Crear nuevo cliente
-      const result = await createClient(clientForm.value)
+      // Crear nuevo cliente (multipart: campos + archivos)
+      const formData = new FormData()
+      formData.append('name', clientForm.value.name)
+      formData.append('companyName', clientForm.value.companyName)
+      formData.append('email', clientForm.value.email)
+      formData.append('phone', clientForm.value.phone)
+      formData.append('country', clientForm.value.country)
+      if (clientForm.value.monthlyAmount !== undefined) {
+        formData.append('monthlyAmount', clientForm.value.monthlyAmount.toString())
+      }
+      if (clientForm.value.paymentDayMonth !== undefined) {
+        formData.append('paymentDayMonth', clientForm.value.paymentDayMonth.toString())
+      }
+      formData.append('hasPaid', clientForm.value.hasPaid.toString())
+      formData.append('isActive', clientForm.value.isActive.toString())
+      if (clientForm.value.notes) {
+        formData.append('notes', clientForm.value.notes)
+      }
+      pendingFiles.value.forEach((file) => {
+        formData.append('files', file)
+      })
+
+      const result = await createClient(formData)
       if (result.success) {
         successMessage.value = 'Cliente creado exitosamente'
         resetForm()
@@ -423,6 +563,10 @@ const resetForm = () => {
     notes: '',
   }
   editingClient.value = null
+  pendingFiles.value = []
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
 }
 
 const startInlineEdit = (client: Client) => {
@@ -505,6 +649,112 @@ const saveEditNotes = () => {
     inlineEditingData.value.notes = editingNotesText.value
   }
   closeEditNotesModal()
+}
+
+// Métodos de archivos
+const handleFilesSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files) {
+    pendingFiles.value = [...pendingFiles.value, ...Array.from(target.files)]
+    target.value = ''
+  }
+}
+
+const removePendingFile = (index: number) => {
+  pendingFiles.value.splice(index, 1)
+}
+
+const openFilesModal = (client: Client) => {
+  selectedClientForFiles.value = client
+  modalPendingFiles.value = []
+  showFilesModal.value = true
+}
+
+const closeFilesModal = () => {
+  showFilesModal.value = false
+  selectedClientForFiles.value = null
+  modalPendingFiles.value = []
+  if (modalFileInputRef.value) {
+    modalFileInputRef.value.value = ''
+  }
+}
+
+const handleModalFilesSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files) {
+    modalPendingFiles.value = [...modalPendingFiles.value, ...Array.from(target.files)]
+    target.value = ''
+  }
+}
+
+const removeModalPendingFile = (index: number) => {
+  modalPendingFiles.value.splice(index, 1)
+}
+
+const downloadFile = (url: string) => {
+  window.open(url, '_blank')
+}
+
+const openFileExternal = (url: string) => {
+  window.open(url, '_blank')
+}
+
+const previewFile = (file: StoredFile) => {
+  previewFileData.value = file
+  showPreviewModal.value = true
+}
+
+const closePreviewModal = () => {
+  showPreviewModal.value = false
+  previewFileData.value = null
+}
+
+const confirmDeleteFile = async (clientId: number, fileKey: string) => {
+  if (!confirmModal.value) return
+
+  const confirmed = await confirmModal.value.open({
+    title: 'Eliminar Archivo',
+    message: '¿Estás seguro que deseas eliminar este archivo? Esta acción no puede revertirse.',
+    confirmText: 'Eliminar'
+  })
+
+  if (confirmed) {
+    const result = await deleteClientFile(clientId, fileKey)
+    if (result.success) {
+      successMessage.value = 'Archivo eliminado exitosamente'
+      // Actualizar el cliente seleccionado en el modal
+      if (selectedClientForFiles.value && selectedClientForFiles.value.id === clientId) {
+        selectedClientForFiles.value = result.data ?? null
+      }
+      setTimeout(() => {
+        successMessage.value = null
+      }, 3000)
+    } else {
+      error.value = result.message
+    }
+  }
+}
+
+const uploadFilesToClient = async (clientId: number) => {
+  if (modalPendingFiles.value.length === 0) return
+
+  uploadingFiles.value = true
+  const result = await addClientFiles(clientId, modalPendingFiles.value)
+  uploadingFiles.value = false
+
+  if (result.success) {
+    successMessage.value = 'Archivos agregados exitosamente'
+    selectedClientForFiles.value = result.data ?? null
+    modalPendingFiles.value = []
+    if (modalFileInputRef.value) {
+      modalFileInputRef.value.value = ''
+    }
+    setTimeout(() => {
+      successMessage.value = null
+    }, 3000)
+  } else {
+    error.value = result.message
+  }
 }
 </script>
 
@@ -1091,7 +1341,6 @@ const saveEditNotes = () => {
   border-collapse: collapse;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 8px;
-  overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   table-layout: fixed;
 }
@@ -1161,16 +1410,16 @@ const saveEditNotes = () => {
 
 .td-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .action-btn {
   background: none;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: 0.25rem;
+  padding: 0.2rem;
   border-radius: 4px;
 }
 
@@ -1447,5 +1696,241 @@ const saveEditNotes = () => {
 .modal-btn-secondary:hover {
   background: rgba(100, 116, 139, 0.5);
   transform: translateY(-1px);
+}
+
+/* Estilos de archivos */
+.form-files-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-files-label {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.form-files-input {
+  display: none;
+}
+
+.form-files-btn {
+  padding: 0.6rem 1rem;
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px dashed rgba(102, 126, 234, 0.5);
+  color: #a5b4fc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.form-files-btn:hover {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.7);
+  color: #c7d2fe;
+}
+
+.pending-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.pending-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.75rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 6px;
+}
+
+.pending-file-name {
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.pending-file-remove {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+  transition: transform 0.2s;
+}
+
+.pending-file-remove:hover {
+  transform: scale(1.2);
+}
+
+.files-btn {
+  padding: 0.5rem 0.75rem;
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  color: #a5b4fc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.files-btn:hover {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.5);
+  transform: scale(1.1);
+}
+
+.action-btn.files-btn {
+  padding: 0.2rem;
+  font-size: 1rem;
+}
+
+.action-btn.files-btn.has-files {
+  background: rgba(16, 185, 129, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+  text-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+}
+
+.action-btn.files-btn.has-files:hover {
+  background: rgba(16, 185, 129, 0.4);
+  border-color: rgba(16, 185, 129, 0.7);
+  transform: scale(1.1);
+}
+
+.files-modal {
+  max-width: 550px;
+}
+
+.files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.file-icon {
+  font-size: 1.5rem;
+}
+
+.file-name {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.file-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.file-action-btn.download-btn:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.file-action-btn.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.no-files-message {
+  text-align: center;
+  padding: 1.5rem;
+  color: #94a3b8;
+}
+
+.no-files-message p {
+  margin: 0;
+}
+
+.add-files-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(96, 165, 250, 0.15);
+}
+
+/* Botones de acción de archivos */
+.file-action-btn.preview-btn:hover {
+  background: rgba(96, 165, 250, 0.2);
+}
+
+.file-action-btn.open-btn:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+/* Modal de preview */
+.preview-modal {
+  max-width: 85vw;
+  max-height: 90vh;
+}
+
+.preview-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  max-height: 65vh;
+  overflow: auto;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.preview-pdf {
+  width: 100%;
+  height: 60vh;
+  border-radius: 8px;
+}
+
+.preview-not-supported {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+}
+
+.preview-not-supported p {
+  margin-bottom: 1rem;
+  font-size: 1rem;
 }
 </style>

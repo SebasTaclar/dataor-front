@@ -1,15 +1,19 @@
 <template>
-  <div class="loading-overlay">
-    <div class="spinner"></div>
-  </div>
+  <Transition name="fade">
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="spinner"></div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
+import { useLoading } from '@/composables/useLoading'
 
 defineOptions({
   name: 'SpinnerComponent',
 });
 
+const { isLoading } = useLoading()
 </script>
 
 <style scoped>
@@ -23,7 +27,7 @@ defineOptions({
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .spinner {
@@ -40,5 +44,15 @@ defineOptions({
   to {
     transform: rotate(360deg);
   }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

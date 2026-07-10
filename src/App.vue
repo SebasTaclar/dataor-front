@@ -78,6 +78,9 @@
 
   <RouterView />
 
+  <!-- Spinner global para operaciones API -->
+  <SpinnerComponent />
+
   <!-- Botones flotantes de redes sociales -->
   <SocialFloating />
   <div class="cursor-dot" ref="cursorDot" aria-hidden="true"></div>
@@ -90,6 +93,7 @@ import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue';
 import router from './router';
 import SocialFloating from '@/components/SocialFloating.vue';
 import AdminDropdown from '@/components/AdminDropdown.vue';
+import SpinnerComponent from '@/components/Spinner.vue';
 
 const isLoggedIn = ref(false);
 const username = ref('');

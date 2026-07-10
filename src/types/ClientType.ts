@@ -1,3 +1,10 @@
+export type StoredFile = {
+  name: string
+  type: string
+  key: string
+  url: string
+}
+
 export type Client = {
   id: number
   name: string
@@ -13,4 +20,5 @@ export type Client = {
   createdAt: string
   updatedAt: string
   photoFileName?: string
+  files?: StoredFile[]
 }

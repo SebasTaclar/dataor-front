@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue'
-import { clientService, type CreateClientRequest, type UpdateClientRequest, type ClientQueryOptions, type ClientListResponse } from '@/services/api/clientService'
+import { clientService, type UpdateClientRequest, type ClientQueryOptions, type ClientListResponse } from '@/services/api/clientService'
 import type { Client } from '@/types/ClientType'
 
 export function useClients() {
@@ -59,16 +59,16 @@ export function useClients() {
   }
 
   /**
-   * Crear un nuevo cliente
+   * Crear un nuevo cliente (multipart: campos + archivos)
    */
   const createClient = async (
-    clientData: CreateClientRequest,
+    formData: FormData,
   ): Promise<{ success: boolean; message: string; data?: Client }> => {
     try {
       loading.value = true
       error.value = null
 
-      const response = await clientService.createClient(clientData)
+      const response = await clientService.createClient(formData)
 
       // Agregar el nuevo cliente a la lista local
       clients.value.push(response.data)
@@ -207,6 +207,70 @@ export function useClients() {
     }
   }
 
+  /**
+   * Agregar archivos a un cliente existente
+   */
+  const addClientFiles = async (
+    clientId: number,
+    files: File[],
+  ): Promise<{ success: boolean; message: string; data?: Client }> => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await clientService.addClientFiles(clientId, files)
+
+      const clientIndex = clients.value.findIndex((c) => c.id === clientId)
+      if (clientIndex !== -1) {
+        clients.value[clientIndex] = response.data
+      }
+
+      return {
+        success: true,
+        message: 'Archivos agregados exitosamente',
+        data: response.data,
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido al agregar archivos'
+      error.value = errorMessage
+      return { success: false, message: errorMessage }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Eliminar un archivo de un cliente
+   */
+  const deleteClientFile = async (
+    clientId: number,
+    fileKey: string,
+  ): Promise<{ success: boolean; message: string; data?: Client }> => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await clientService.deleteClientFile(clientId, fileKey)
+
+      const clientIndex = clients.value.findIndex((c) => c.id === clientId)
+      if (clientIndex !== -1) {
+        clients.value[clientIndex] = response.data
+      }
+
+      return {
+        success: true,
+        message: 'Archivo eliminado exitosamente',
+        data: response.data,
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido al eliminar archivo'
+      error.value = errorMessage
+      return { success: false, message: errorMessage }
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     clients,
     loading,
@@ -218,5 +282,7 @@ export function useClients() {
     deleteClient,
     uploadClientPhoto,
     deleteClientPhoto,
+    addClientFiles,
+    deleteClientFile,
   }
 }

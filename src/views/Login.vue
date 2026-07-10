@@ -24,8 +24,6 @@
         </button>
       </form>
     </div>
-
-    <Spinner v-if="loading" />
   </main>
 </template>
 
@@ -33,7 +31,6 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService, type LoginCredentials } from '@/services/api';
-import Spinner from '@/components/Spinner.vue';
 
 defineOptions({
   name: 'LoginView',

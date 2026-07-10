@@ -1,3 +1,7 @@
+import { useLoading } from '@/composables/useLoading'
+
+const { show, hide } = useLoading()
+
 // Configuración base para la API
 export const API_CONFIG = {
   baseURL: import.meta.env.DEV
@@ -63,6 +67,7 @@ export class ApiClient {
       },
     }
 
+    show()
     try {
       const response = await fetch(url, config)
       const data = await response.json()
@@ -75,6 +80,8 @@ export class ApiClient {
     } catch (error) {
       console.error('API Request Error:', error)
       throw error
+    } finally {
+      hide()
     }
   }
 
