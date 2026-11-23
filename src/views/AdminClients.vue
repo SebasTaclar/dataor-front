@@ -45,12 +45,13 @@
               <input v-model="clientForm.email" type="email" placeholder="Email" required class="form-input" />
               <input v-model="clientForm.phone" type="tel" placeholder="Teléfono" required class="form-input" />
               <input v-model="clientForm.country" type="text" placeholder="País" required class="form-input" />
-              <input v-model="clientForm.monthlyAmount" type="number" step="0.01" placeholder="Monto mensual"
+              <input v-model="clientForm.monthlyAmount" type="number" step="0.01" placeholder="Monto"
                 class="form-input" />
               <input v-model="clientForm.paymentDayMonth" type="number" min="1" max="31"
                 placeholder="Día de pago del mes (1-31)" class="form-input" />
               <input v-model="clientForm.billingMonths" type="number" min="1" placeholder="Cobro cada (meses)"
                 class="form-input" />
+              <input v-model="clientForm.lastPaymentDate" type="date" class="form-input" />
               <label class="form-toggle">
                 <input v-model="clientForm.hasPaid" type="checkbox" />
                 <span>{{ clientForm.hasPaid ? 'Pagado' : 'No pagado' }}</span>
@@ -98,7 +99,7 @@
                 <div class="project-counter">{{ clients.length }} clientes registrados</div>
               </div>
               <div class="revenue-summary">
-                <small class="revenue-label">💰 Ingresos Mensuales:</small>
+                <small class="revenue-label">💰 Ingresos:</small>
                 <strong class="revenue-value">${{ calculateMonthlyRevenue().toLocaleString('es-CO', {
                   minimumFractionDigits: 0
                 }) }}</strong>
@@ -120,9 +121,10 @@
                     <th style="width: 6%">País</th>
                     <th style="width: 6%">Estado</th>
                     <th style="width: 6%">Pago</th>
-                    <th style="width: 8%">Monto Mensual</th>
+                    <th style="width: 8%">Monto</th>
                     <th style="width: 6%">Día de Pago</th>
                     <th style="width: 6%">Cobro cada</th>
+                    <th style="width: 9%">Último pago</th>
                     <th style="width: 7%">Notas</th>
                     <th style="width: 8%">Acciones</th>
                   </tr>
@@ -220,6 +222,14 @@
                        </template>
                        <template v-else>
                          {{ client.billingMonths ? `Cada ${client.billingMonths} mes(es)` : 'Cada 1 mes' }}
+                       </template>
+                     </td>
+                     <td class="td-last-payment">
+                       <template v-if="inlineEditingId === client.id">
+                         <input v-model="inlineEditingData!.lastPaymentDate" type="date" class="edit-input" />
+                       </template>
+                       <template v-else>
+                         {{ client.lastPaymentDate ? new Date(client.lastPaymentDate).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) : '-' }}
                        </template>
                      </td>
                      <td class="td-notes">
@@ -448,6 +458,7 @@ const clientForm = ref({
   monthlyAmount: undefined as number | undefined,
   paymentDayMonth: undefined as number | undefined,
   billingMonths: undefined as number | undefined,
+  lastPaymentDate: undefined as string | undefined,
   hasPaid: false,
   isActive: true,
   notes: '',
@@ -509,6 +520,9 @@ const saveClient = async () => {
       }
       if (clientForm.value.billingMonths !== undefined) {
         formData.append('billingMonths', clientForm.value.billingMonths.toString())
+      }
+      if (clientForm.value.lastPaymentDate) {
+        formData.append('lastPaymentDate', new Date(clientForm.value.lastPaymentDate + 'T00:00:00').toISOString())
       }
       formData.append('hasPaid', clientForm.value.hasPaid.toString())
       formData.append('isActive', clientForm.value.isActive.toString())
@@ -574,6 +588,7 @@ const resetForm = () => {
     monthlyAmount: undefined,
     paymentDayMonth: undefined,
     billingMonths: undefined,
+    lastPaymentDate: undefined,
     hasPaid: false,
     isActive: true,
     notes: '',
@@ -596,6 +611,7 @@ const startInlineEdit = (client: Client) => {
     monthlyAmount: client.monthlyAmount,
     paymentDayMonth: client.paymentDayMonth,
     billingMonths: client.billingMonths,
+    lastPaymentDate: client.lastPaymentDate ? client.lastPaymentDate.split('T')[0] : undefined,
     hasPaid: client.hasPaid,
     isActive: client.isActive,
     notes: client.notes,
@@ -607,11 +623,17 @@ const cancelInlineEdit = () => {
   inlineEditingData.value = null
 }
 
-const saveInlineEditBatch = async (clientId: number) => {
-  try {
-    if (!inlineEditingData.value) return
+  const saveInlineEditBatch = async (clientId: number) => {
+    try {
+      if (!inlineEditingData.value) return
 
-    const result = await updateClient(clientId, inlineEditingData.value)
+      if (inlineEditingData.value.lastPaymentDate && !inlineEditingData.value.lastPaymentDate.includes('T')) {
+        inlineEditingData.value.lastPaymentDate = new Date(
+          inlineEditingData.value.lastPaymentDate + 'T00:00:00',
+        ).toISOString()
+      }
+
+      const result = await updateClient(clientId, inlineEditingData.value)
     if (result.success) {
       successMessage.value = 'Cliente actualizado exitosamente'
       inlineEditingId.value = null
@@ -1428,6 +1450,12 @@ const uploadFilesToClient = async (clientId: number) => {
 .td-billing-months {
   font-weight: 500;
   color: #a5b4fc;
+  text-align: center;
+}
+
+.td-last-payment {
+  font-weight: 500;
+  color: #fbbf24;
   text-align: center;
 }
 

@@ -26,6 +26,7 @@ export interface CreateClientRequest {
   monthlyAmount?: number
   paymentDayMonth?: number
   billingMonths?: number
+  lastPaymentDate?: string | null
   hasPaid?: boolean
   isActive?: boolean
 }
@@ -41,6 +42,7 @@ export interface UpdateClientRequest {
   monthlyAmount?: number
   paymentDayMonth?: number
   billingMonths?: number
+  lastPaymentDate?: string | null
   hasPaid?: boolean
   isActive?: boolean
 }
