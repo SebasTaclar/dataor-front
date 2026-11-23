@@ -49,6 +49,8 @@
                 class="form-input" />
               <input v-model="clientForm.paymentDayMonth" type="number" min="1" max="31"
                 placeholder="Día de pago del mes (1-31)" class="form-input" />
+              <input v-model="clientForm.billingMonths" type="number" min="1" placeholder="Cobro cada (meses)"
+                class="form-input" />
               <label class="form-toggle">
                 <input v-model="clientForm.hasPaid" type="checkbox" />
                 <span>{{ clientForm.hasPaid ? 'Pagado' : 'No pagado' }}</span>
@@ -120,6 +122,7 @@
                     <th style="width: 6%">Pago</th>
                     <th style="width: 8%">Monto Mensual</th>
                     <th style="width: 6%">Día de Pago</th>
+                    <th style="width: 6%">Cobro cada</th>
                     <th style="width: 7%">Notas</th>
                     <th style="width: 8%">Acciones</th>
                   </tr>
@@ -202,16 +205,24 @@
                         {{ client.monthlyAmount ? `$${client.monthlyAmount.toLocaleString('es-CO')}` : '-' }}
                       </template>
                     </td>
-                    <td class="td-payment-day">
-                      <template v-if="inlineEditingId === client.id">
-                        <input v-model.number="inlineEditingData!.paymentDayMonth" type="number" min="1" max="31"
-                          class="edit-input" />
-                      </template>
-                      <template v-else>
-                        {{ client.paymentDayMonth ? `Día ${client.paymentDayMonth}` : '-' }}
-                      </template>
-                    </td>
-                    <td class="td-notes">
+                     <td class="td-payment-day">
+                       <template v-if="inlineEditingId === client.id">
+                         <input v-model.number="inlineEditingData!.paymentDayMonth" type="number" min="1" max="31"
+                           class="edit-input" />
+                       </template>
+                       <template v-else>
+                         {{ client.paymentDayMonth ? `Día ${client.paymentDayMonth}` : '-' }}
+                       </template>
+                     </td>
+                     <td class="td-billing-months">
+                       <template v-if="inlineEditingId === client.id">
+                         <input v-model.number="inlineEditingData!.billingMonths" type="number" min="1" class="edit-input" />
+                       </template>
+                       <template v-else>
+                         {{ client.billingMonths ? `Cada ${client.billingMonths} mes(es)` : 'Cada 1 mes' }}
+                       </template>
+                     </td>
+                     <td class="td-notes">
                       <template v-if="inlineEditingId === client.id">
                         <button @click="openEditNotesModal(client)" class="notes-edit-btn" title="Editar notas">
                           ✏️ {{ inlineEditingData!.notes ? 'Editar notas' : 'Agregar notas' }}
@@ -436,6 +447,7 @@ const clientForm = ref({
   country: '',
   monthlyAmount: undefined as number | undefined,
   paymentDayMonth: undefined as number | undefined,
+  billingMonths: undefined as number | undefined,
   hasPaid: false,
   isActive: true,
   notes: '',
@@ -494,6 +506,9 @@ const saveClient = async () => {
       }
       if (clientForm.value.paymentDayMonth !== undefined) {
         formData.append('paymentDayMonth', clientForm.value.paymentDayMonth.toString())
+      }
+      if (clientForm.value.billingMonths !== undefined) {
+        formData.append('billingMonths', clientForm.value.billingMonths.toString())
       }
       formData.append('hasPaid', clientForm.value.hasPaid.toString())
       formData.append('isActive', clientForm.value.isActive.toString())
@@ -558,6 +573,7 @@ const resetForm = () => {
     country: '',
     monthlyAmount: undefined,
     paymentDayMonth: undefined,
+    billingMonths: undefined,
     hasPaid: false,
     isActive: true,
     notes: '',
@@ -579,6 +595,7 @@ const startInlineEdit = (client: Client) => {
     country: client.country,
     monthlyAmount: client.monthlyAmount,
     paymentDayMonth: client.paymentDayMonth,
+    billingMonths: client.billingMonths,
     hasPaid: client.hasPaid,
     isActive: client.isActive,
     notes: client.notes,
@@ -1405,6 +1422,12 @@ const uploadFilesToClient = async (clientId: number) => {
 .td-payment-day {
   font-weight: 500;
   color: #60a5fa;
+  text-align: center;
+}
+
+.td-billing-months {
+  font-weight: 500;
+  color: #a5b4fc;
   text-align: center;
 }
 

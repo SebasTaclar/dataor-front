@@ -25,6 +25,8 @@ export interface QuoteClient {
   notes?: string
   monthlyAmount?: number | null
   paymentDayMonth?: number | null
+  billingMonths?: number | null
+  lastPaymentDate?: string | null
   createdAt?: string
   updatedAt?: string
 }

@@ -15,6 +15,8 @@ export type Client = {
   notes?: string
   monthlyAmount?: number
   paymentDayMonth?: number
+  billingMonths?: number
+  lastPaymentDate?: string | null
   hasPaid?: boolean
   isActive: boolean
   createdAt: string
